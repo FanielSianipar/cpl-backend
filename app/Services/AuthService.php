@@ -2,16 +2,14 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 
 class AuthService
 {
     public function login(array $credentials)
     {
         if (!Auth::attempt($credentials)) {
-            return ['message' => 'Unauthenticated'];
+            return ['message' => 'Unauthorized'];
         }
 
         $user = Auth::user();
@@ -23,6 +21,7 @@ class AuthService
             'token_type'   => 'Bearer',
             'user'         => $user,
             'roles'        => $user->getRoleNames(),
+            'permissions'  => $user->getAllPermissions()->pluck('name'),
         ];
     }
 

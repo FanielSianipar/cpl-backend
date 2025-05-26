@@ -21,7 +21,7 @@ class AuthController extends Controller
         $data = $request->validated();
         $result = $this->authService->login($data);
         if (isset($result['message']) && $result['message'] === 'Unauthenticated') {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
         return response()->json($result, 200);
     }
