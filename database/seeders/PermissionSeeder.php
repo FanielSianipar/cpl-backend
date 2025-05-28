@@ -26,40 +26,44 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'Mengelola data nilai mahasiswa']);
         Permission::create(['name' => 'Melihat hasil perhitungan']);
 
-        // Roles
-        $adminUniversitas = Role::create(['name' => 'admin universitas']);
-        $adminProdi = Role::create(['name' => 'admin prodi']);
-        $kaprodi = Role::create(['name' => 'kaprodi']);
-        $dosen = Role::create(['name' => 'dosen']);
+        // Assign permissions to existing roles
+        $adminUniversitas = Role::where('name', 'Admin Universitas')->first();
+        $adminProdi = Role::where('name', 'Admin Prodi')->first();
+        $kaprodi = Role::where('name', 'Kaprodi')->first();
+        $dosen = Role::where('name', 'Dosen')->first();
 
-        // Assign permissions to roles
-        $adminUniversitas->givePermissionTo([
-            'Mengelola akun admin universitas',
-            'Mengelola akun admin prodi',
-            'Melihat hasil perhitungan',
-        ]);
+        if ($adminUniversitas) {
+            $adminUniversitas->givePermissionTo([
+                'Mengelola akun admin universitas',
+                'Mengelola akun admin prodi',
+                'Melihat hasil perhitungan',
+            ]);
+        }
 
-        $adminProdi->givePermissionTo([
-            'Mengelola akun kaprodi',
-            'Mengelola akun dosen',
-            'Mengelola data mahasiswa',
-            'Mengelola data mata kuliah',
-            'Mengelola data CPL',
-            'Mengelola data CPMK',
-            'Melihat hasil perhitungan',
-        ]);
+        if ($adminProdi) {
+            $adminProdi->givePermissionTo([
+                'Mengelola akun kaprodi',
+                'Mengelola akun dosen',
+                'Mengelola data mahasiswa',
+                'Mengelola data mata kuliah',
+                'Mengelola data CPL',
+                'Mengelola data CPMK',
+                'Melakukan pemetaan CPL',
+                'Melakukan pemetaan CPMK',
+                'Melihat hasil perhitungan',
+            ]);
+        }
 
-        $kaprodi->givePermissionTo([
-            'Melakukan pemetaan CPL',
-            'Melakukan pemetaan CPMK',
-        ]);
+        if ($kaprodi) {
+            $kaprodi->givePermissionTo([
+                'Melihat hasil perhitungan',
+            ]);
+        }
 
-        $dosen->givePermissionTo([
-            'Melakukan pemetaan CPL',
-            'Melakukan pemetaan CPMK',
-            'Memasukkan bobot CPL',
-            'Memasukkan bobot CPMK',
-            'Mengelola data nilai mahasiswa',
-        ]);
+        if ($dosen) {
+            $dosen->givePermissionTo([
+                'Mengelola data nilai mahasiswa',
+            ]);
+        }
     }
 }
