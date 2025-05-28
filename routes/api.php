@@ -18,20 +18,26 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
-// On progress
 Route::middleware(['auth:sanctum'])->group(function () {
     // Admin Universitas
-    // Hanya Admin Universitas yang memiliki permission 'kelola admin universitas'
+    // Kelola akun admin universitas
     Route::middleware(['role:Admin Universitas', 'permission:Mengelola akun admin universitas'])->group(function () {
-        Route::get('/kelola-admin-universitas', [AdminUniversitasController::class, 'viewAkunAdminUniversitas']);
-        Route::post('/kelola-admin-universitas', [AdminUniversitasController::class, 'storeAkunAdminUniversitas']);
-        Route::put('/kelola-admin-universitas', [AdminUniversitasController::class, 'storeAkunAdminUniversitas']);
-        Route::delete('/kelola-admin-universitas', [AdminUniversitasController::class, 'storeAkunAdminUniversitas']);
+        Route::get('/kelola-akun-admin-universitas', [AdminUniversitasController::class, 'viewAkunAdminUniversitas']);
+        Route::post('/kelola-akun-admin-universitas', [AdminUniversitasController::class, 'storeAkunAdminUniversitas']);
+        Route::put('/kelola-akun-admin-universitas', [AdminUniversitasController::class, 'storeAkunAdminUniversitas']);
+        Route::delete('/kelola-akun-admin-universitas', [AdminUniversitasController::class, 'storeAkunAdminUniversitas']);
+    });
+    // Kelola akun admin prodi
+    Route::middleware(['role:Admin Universitas', 'permission:Mengelola akun admin prodi'])->group(function () {
+        Route::get('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'viewAkunAdminProdi']);
+        Route::post('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'storeAkunAdminProdi']);
+        Route::put('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'storeAkunAdminProdi']);
+        Route::delete('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'storeAkunAdminProdi']);
     });
 
     // Hanya Admin Prodi yang memiliki permission 'kelola admin prodi'
     Route::middleware(['role:admin prodi', 'permission:kelola admin prodi'])->group(function () {
-        Route::post('/kelola-admin-prodi', [PermissionController::class, 'kelolaAdminProdi']);
+        Route::get('/kelola-admin-prodi', [AdminUniversitasController::class, 'viewAkunAdminUniversitas']);
     });
 
     // Pengguna yang memiliki permission untuk melihat hasil perhitungan

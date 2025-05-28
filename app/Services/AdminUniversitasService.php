@@ -153,7 +153,7 @@ class AdminUniversitasService
                     $user->email    = $data['email'];
                     $user->password = Hash::make($data['password']);
                     $user->save();
-
+                    DB::commit();
 
                     // Assign role 'admin prodi' menggunakan Spatie Permission.
                     $user->assignRole('Admin Prodi');
