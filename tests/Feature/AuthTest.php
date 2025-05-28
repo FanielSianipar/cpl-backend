@@ -3,8 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Arr;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -12,7 +11,7 @@ use Spatie\Permission\Models\Role;
 
 class AuthTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     // Fungsi untuk set up lingkungan test
     protected function setUp(): void
