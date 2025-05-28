@@ -42,7 +42,7 @@ class AkunAdminUniversitasTest extends TestCase
 
         // Lakukan GET request ke endpoint view.
         $response = $this->actingAs($user)
-            ->getJson('/api/kelola-admin-universitas');
+            ->getJson('/api/kelola-akun-admin-universitas?action=view');
 
         // Pastikan response memiliki status 200 dan pesan yang sesuai.
         $response->assertStatus(200)
@@ -75,7 +75,7 @@ class AkunAdminUniversitasTest extends TestCase
 
         // Lakukan GET request dengan parameter "id" untuk mengambil detail akun.
         $response = $this->actingAs($user)
-            ->getJson('/api/kelola-admin-universitas?id=' . $admin->id);
+            ->getJson('/api/kelola-akun-admin-universitas?action=view&id=' . $admin->id);
 
         // Pastikan response memiliki status 200 dan pesan sesuai.
         $response->assertStatus(200)
@@ -102,7 +102,7 @@ class AkunAdminUniversitasTest extends TestCase
         $role->givePermissionTo('Mengelola akun admin universitas');
 
         // Kirim request sebagai user yang sudah memiliki role dan permission
-        $response = $this->actingAs($user)->postJson('/api/kelola-admin-universitas', [
+        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-universitas', [
             'action' => 'store',
             'name' => 'Admin Universitas 1',
             'email' => 'admin1@example.com',
@@ -134,7 +134,7 @@ class AkunAdminUniversitasTest extends TestCase
         $role->givePermissionTo('Mengelola akun admin universitas');
 
         // Kirim request dengan data yang tidak valid
-        $response = $this->actingAs($user)->postJson('/api/kelola-admin-universitas', [
+        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-universitas', [
             'action' => 'store',
             'name' => '', // Kosong, harusnya invalid
             'email' => 'invalid-email', // Format salah
@@ -177,7 +177,7 @@ class AkunAdminUniversitasTest extends TestCase
         ];
 
         // Lakukan request update dengan method POST sesuai dengan route Anda
-        $response = $this->actingAs($user)->postJson('/api/kelola-admin-universitas', $updateData);
+        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-universitas', $updateData);
 
         // Pastikan response berhasil dengan status 200 dan pesan yang sesuai
         $response->assertStatus(200)
@@ -223,7 +223,7 @@ class AkunAdminUniversitasTest extends TestCase
             'password' => 'short',
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-admin-universitas', $updateData);
+        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-universitas', $updateData);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['name', 'email', 'password']);
@@ -249,7 +249,7 @@ class AkunAdminUniversitasTest extends TestCase
         $admin->assignRole($role);
 
         // Jalankan request delete dengan method POST dan parameter action 'delete'
-        $response = $this->actingAs($user)->postJson('/api/kelola-admin-universitas', [
+        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-universitas', [
             'action' => 'delete',
             'id'     => $admin->id,
         ]);
