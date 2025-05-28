@@ -30,9 +30,5 @@ class AuthController extends Controller
     {
         $this->authService->logout($request->user());
         return response()->json(['message' => 'Logged out'], 200);
-
-        // $request->user()->tokens()->delete();
-
-        // return response()->json(['message' => 'Logged out'], 200);
     }
 }
