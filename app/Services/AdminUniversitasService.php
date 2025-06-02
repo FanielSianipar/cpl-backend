@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Prodi;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -9,6 +10,96 @@ use Exception;
 
 class AdminUniversitasService
 {
+    /**
+     * Kelola data prodi melalui model User.
+     * Operasi yang didukung: view, store, update, dan delete.
+     * Hanya user dengan role 'admin universitas' yang akan diproses.
+     *
+     * @param array $data
+     * @return array
+     * @throws Exception
+     */
+    public function kelolaDataProdi(array $data): array
+    {
+        $action = $data['action'] ?? null;
+
+        try {
+            switch ($action) {
+                case 'view':
+                    // Jika terdapat parameter id, ambil detail satu data Prodi beserta relasi Fakultas.
+                    if (isset($data['prodi_id'])) {
+                        $prodi = Prodi::with('fakultas')->findOrFail($data['prodi_id']);
+                        return [
+                            'data'    => $prodi,
+                            'message' => 'Data prodi berhasil diambil.'
+                        ];
+                    } else {
+                        // Jika tidak ada parameter id, ambil semua data Prodi beserta relasi Fakultas.
+                        $prodis = Prodi::with('fakultas')->get();
+                        return [
+                            'data'    => $prodis,
+                            'message' => 'Semua data prodi berhasil diambil.'
+                        ];
+                    }
+                    break;
+
+                case 'store':
+                    DB::beginTransaction();
+                    // Membuat data prodi baru menggunakan Eloquent ORM
+                    $prodi = Prodi::create([
+                        'kode_prodi'  => $data['kode_prodi'],
+                        'nama_prodi'  => $data['nama_prodi'],
+                        'fakultas_id' => $data['fakultas_id'],
+                    ]);
+                    DB::commit();
+                    return [
+                        'data'    => $prodi,
+                        'message' => 'Data prodi berhasil dibuat.'
+                    ];
+                    break;
+
+                case 'update':
+                    if (!isset($data['prodi_id'])) {
+                        return ['message' => 'ID prodi tidak ditemukan untuk update.'];
+                    }
+                    DB::beginTransaction();
+                    $prodi = Prodi::findOrFail($data['prodi_id']);
+                    $prodi->update([
+                        'kode_prodi'  => $data['kode_prodi']  ?? $prodi->kode_prodi,
+                        'nama_prodi'  => $data['nama_prodi']  ?? $prodi->nama_prodi,
+                        'fakultas_id' => $data['fakultas_id'] ?? $prodi->fakultas_id,
+                    ]);
+                    DB::commit();
+                    return [
+                        'data'    => $prodi,
+                        'message' => 'Data prodi berhasil diperbarui.'
+                    ];
+                    break;
+
+                case 'delete':
+                    if (!isset($data['prodi_id'])) {
+                        return ['message' => 'ID prodi tidak ditemukan untuk dihapus.'];
+                    }
+                    DB::beginTransaction();
+                    $prodi = Prodi::findOrFail($data['prodi_id']);
+                    $prodi->delete();
+                    DB::commit();
+                    return [
+                        'message' => 'Data prodi berhasil dihapus.'
+                    ];
+                    break;
+
+                default:
+                    return [
+                        'message' => 'Aksi tidak diketahui.'
+                    ];
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
     /**
      * Kelola akun Admin Universitas melalui model User.
      * Operasi yang didukung: view, store, update, dan delete.
@@ -118,6 +209,15 @@ class AdminUniversitasService
         }
     }
 
+    /**
+     * Kelola akun Admin Prodi melalui model User.
+     * Operasi yang didukung: view, store, update, dan delete.
+     * Hanya user dengan role 'admin universitas' yang akan diproses.
+     *
+     * @param array $data
+     * @return array
+     * @throws Exception
+     */
     public function kelolaAkunAdminProdi(array $data)
     {
         $action = $data['action'] ?? null;

@@ -11,6 +11,7 @@ class PermissionSeeder extends Seeder
     public function run()
     {
         // Permissions
+        Permission::create(['name' => 'Mengelola data prodi']);
         Permission::create(['name' => 'Mengelola akun admin universitas']);
         Permission::create(['name' => 'Mengelola akun admin prodi']);
         Permission::create(['name' => 'Mengelola akun kaprodi']);
@@ -34,6 +35,7 @@ class PermissionSeeder extends Seeder
 
         if ($adminUniversitas) {
             $adminUniversitas->givePermissionTo([
+                'Mengelola data prodi',
                 'Mengelola akun admin universitas',
                 'Mengelola akun admin prodi',
                 'Melihat hasil perhitungan',

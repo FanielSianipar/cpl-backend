@@ -20,6 +20,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 Route::middleware(['auth:sanctum'])->group(function () {
     // Admin Universitas
+    // Kelola data prodi
+    Route::middleware(['role:Admin Universitas', 'permission:Mengelola data prodi'])->group(function () {
+        Route::post('/kelola-data-prodi', [AdminUniversitasController::class, 'kelolaDataProdi']);
+        Route::get('/kelola-data-prodi', [AdminUniversitasController::class, 'kelolaDataProdi']);
+        Route::put('/kelola-data-prodi', [AdminUniversitasController::class, 'kelolaDataProdi']);
+        Route::delete('/kelola-data-prodi', [AdminUniversitasController::class, 'kelolaDataProdi']);
+    });
     // Kelola akun admin universitas
     Route::middleware(['role:Admin Universitas', 'permission:Mengelola akun admin universitas'])->group(function () {
         Route::get('/kelola-akun-admin-universitas', [AdminUniversitasController::class, 'viewAkunAdminUniversitas']);
@@ -34,15 +41,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'storeAkunAdminProdi']);
         Route::delete('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'storeAkunAdminProdi']);
     });
+    // Lihat hasil perhitungan
+    Route::middleware(['permission:view calculation results'])->group(function () {
+        Route::get('/lihat-hasil-perhitungan', [AdminUniversitasController::class, 'viewCalculationResults']);
+    });
 
     // Hanya Admin Prodi yang memiliki permission 'kelola admin prodi'
     Route::middleware(['role:admin prodi', 'permission:kelola admin prodi'])->group(function () {
         Route::get('/kelola-admin-prodi', [AdminUniversitasController::class, 'viewAkunAdminUniversitas']);
-    });
-
-    // Pengguna yang memiliki permission untuk melihat hasil perhitungan
-    Route::middleware(['permission:view calculation results'])->group(function () {
-        Route::get('/view-calculation-results', [PermissionController::class, 'viewCalculationResults']);
     });
 
     // Admin Prodi

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProdiRequest;
 use App\Http\Requests\StoreAkunRequest;
+use App\Models\Prodi;
 use App\Services\AdminUniversitasService;
 use Illuminate\Http\Request;
 
@@ -18,6 +20,28 @@ class AdminUniversitasController extends Controller
     public function __construct(AdminUniversitasService $adminUniversitasService)
     {
         $this->adminUniversitasService = $adminUniversitasService;
+    }
+
+    /**
+     * Endpoint untuk mengelola data Prodi.
+     * Untuk setiap operasi CRUD, parameter 'action' harus disertakan.
+     *
+     * @param \App\Http\Requests\ProdiRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function kelolaDataProdi(ProdiRequest $request)
+    {
+        // Dapatkan data tervalidasi, lalu tambahkan key 'action' (misalnya dikirim via query atau body)
+        $data = $request->validated();
+        // Pastikan key 'action' diatur melalui request (misalnya store, update, view, delete)
+        $data['action'] = $request->input('action');
+
+        $result = $this->adminUniversitasService->kelolaDataProdi($data);
+
+        // Status code ditetapkan berdasarkan jenis aksi, misal 201 untuk store/update, 200 untuk view/delete
+        $statusCode = in_array($data['action'], ['store', 'update']) ? 201 : 200;
+
+        return response()->json($result, $statusCode);
     }
 
     /**
