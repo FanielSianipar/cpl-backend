@@ -46,12 +46,20 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/lihat-hasil-perhitungan', [AdminUniversitasController::class, 'viewCalculationResults']);
     });
 
+    // Admin Prodi
     // Kelola akun kaprodi
     Route::middleware(['role:Admin Prodi', 'permission:Mengelola akun kaprodi'])->group(function () {
         Route::get('/kelola-akun-kaprodi', [AdminProdiController::class, 'kelolaAkunKaprodi']);
         Route::post('/kelola-akun-kaprodi', [AdminProdiController::class, 'kelolaAkunKaprodi']);
         Route::put('/kelola-akun-kaprodi', [AdminProdiController::class, 'kelolaAkunKaprodi']);
         Route::delete('/kelola-akun-kaprodi', [AdminProdiController::class, 'kelolaAkunKaprodi']);
+    });
+    // Kelola akun dosen
+    Route::middleware(['role:Admin Prodi', 'permission:Mengelola akun dosen'])->group(function () {
+        Route::get('/kelola-akun-dosen', [AdminProdiController::class, 'kelolaAkunDosen']);
+        Route::post('/kelola-akun-dosen', [AdminProdiController::class, 'kelolaAkunDosen']);
+        Route::put('/kelola-akun-dosen', [AdminProdiController::class, 'kelolaAkunDosen']);
+        Route::delete('/kelola-akun-dosen', [AdminProdiController::class, 'kelolaAkunDosen']);
     });
 
     // // Kaprodi
