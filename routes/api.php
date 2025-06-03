@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\AdminProdiController;
 use App\Http\Controllers\AdminUniversitasController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\PermissionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -46,21 +46,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/lihat-hasil-perhitungan', [AdminUniversitasController::class, 'viewCalculationResults']);
     });
 
-    // Hanya Admin Prodi yang memiliki permission 'kelola admin prodi'
-    Route::middleware(['role:admin prodi', 'permission:kelola admin prodi'])->group(function () {
-        Route::get('/kelola-admin-prodi', [AdminUniversitasController::class, 'viewAkunAdminUniversitas']);
+    // Kelola akun kaprodi
+    Route::middleware(['role:Admin Prodi', 'permission:Mengelola akun kaprodi'])->group(function () {
+        Route::get('/kelola-akun-kaprodi', [AdminProdiController::class, 'kelolaAkunKaprodi']);
+        Route::post('/kelola-akun-kaprodi', [AdminProdiController::class, 'kelolaAkunKaprodi']);
+        Route::put('/kelola-akun-kaprodi', [AdminProdiController::class, 'kelolaAkunKaprodi']);
+        Route::delete('/kelola-akun-kaprodi', [AdminProdiController::class, 'kelolaAkunKaprodi']);
     });
-
-    // Admin Prodi
-    // Route::middleware(['role:admin prodi'])->group(function () {
-    //     Route::post('/manage-kaprodi', [PermissionController::class, 'manageKaprodi']);
-    //     Route::post('/manage-dosen', [PermissionController::class, 'manageDosen']);
-    //     Route::post('/manage-mahasiswa', [PermissionController::class, 'manageMahasiswa']);
-    //     Route::post('/manage-mata-kuliah', [PermissionController::class, 'manageMataKuliah']);
-    //     Route::post('/manage-cpl', [PermissionController::class, 'manageCPL']);
-    //     Route::post('/manage-cpmk', [PermissionController::class, 'manageCPMK']);
-    //     Route::get('/view-calculation-results', [PermissionController::class, 'viewCalculationResults']);
-    // });
 
     // // Kaprodi
     // Route::middleware(['role:kaprodi'])->group(function () {

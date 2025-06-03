@@ -1,0 +1,60 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreAkunRequest;
+use Illuminate\Http\Request;
+use App\Services\AdminProdiService;
+
+class AdminProdiController extends Controller
+{
+    protected $adminProdiService;
+
+    /**
+     * Inject service yang dibutuhkan.
+     *
+     * @param AdminProdiService $adminProdiService
+     */
+    public function __construct(AdminProdiService $adminProdiService)
+    {
+        $this->adminProdiService = $adminProdiService;
+    }
+
+    /**
+     * Mengelola akun Admin Prodi (view, store, update, delete).
+     *
+     * Ekspektasi: Request mengandung parameter 'action' untuk menentukan operasi CRUD.
+     *
+     * @param StoreAkunRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function kelolaAkunKaprodi(StoreAkunRequest $request)
+    {
+        // Dapatkan data tervalidasi, lalu tambahkan key 'action' (misalnya dikirim via query atau body)
+        $data = $request->validated();
+        // Pastikan key 'action' diatur melalui request (misalnya store, update, view, delete)
+        $data['action'] = $request->input('action');
+
+        $result = $this->adminProdiService->kelolaAkunKaprodi($data);
+
+        // Status code ditetapkan berdasarkan jenis aksi, misal 201 untuk store/update, 200 untuk view/delete
+        $statusCode = in_array($data['action'], ['store']) ? 201 : 200;
+
+        return response()->json($result, $statusCode);
+    }
+
+    // Endpoint untuk mengelola akun dosen
+    public function manageDosen(Request $request)
+    {
+        $result = $this->adminProdiService->manageDosen($request->all());
+        return response()->json($result);
+    }
+
+    // Endpoint untuk mengelola data mahasiswa, mata kuliah, CPL, dan CPMK
+    public function manageData(Request $request)
+    {
+        $result = $this->adminProdiService->manageData($request->all());
+        return response()->json($result);
+    }
+}
