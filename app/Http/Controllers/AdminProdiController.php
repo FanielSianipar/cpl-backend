@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\MahasiswaRequest;
 use App\Http\Requests\StoreAkunRequest;
 use Illuminate\Http\Request;
 use App\Services\AdminProdiService;
@@ -60,6 +61,28 @@ class AdminProdiController extends Controller
         $data['action'] = $request->input('action');
 
         $result = $this->adminProdiService->kelolaAkunDosen($data);
+
+        // Status code ditetapkan berdasarkan jenis aksi, misal 201 untuk store/update, 200 untuk view/delete
+        $statusCode = in_array($data['action'], ['store']) ? 201 : 200;
+
+        return response()->json($result, $statusCode);
+    }
+
+    /**
+     * Endpoint untuk mengelola data Mahasiswa.
+     * Untuk setiap operasi CRUD, parameter 'action' harus disertakan.
+     *
+     * @param \App\Http\Requests\MahasiswaRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function kelolaDataMahasiswa(MahasiswaRequest $request)
+    {
+        // Dapatkan data tervalidasi, lalu tambahkan key 'action' (misalnya dikirim via query atau body)
+        $data = $request->validated();
+        // Pastikan key 'action' diatur melalui request (misalnya store, update, view, delete)
+        $data['action'] = $request->input('action');
+
+        $result = $this->adminProdiService->kelolaDataMahasiswa($data);
 
         // Status code ditetapkan berdasarkan jenis aksi, misal 201 untuk store/update, 200 untuk view/delete
         $statusCode = in_array($data['action'], ['store']) ? 201 : 200;

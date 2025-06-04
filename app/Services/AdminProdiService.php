@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Mahasiswa;
+use App\Models\Prodi;
 use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -78,7 +80,6 @@ class AdminProdiService
                     if (isset($data['password'])) {
                         $user->password = bcrypt($data['password']);
                     }
-                    $user->save();
 
                     DB::commit();
 
@@ -174,7 +175,6 @@ class AdminProdiService
                     if (isset($data['password'])) {
                         $user->password = bcrypt($data['password']);
                     }
-                    $user->save();
 
                     DB::commit();
 
@@ -197,6 +197,112 @@ class AdminProdiService
                     DB::commit();
                     return [
                         'message' => 'Akun Dosen berhasil dihapus.'
+                    ];
+                    break;
+
+                default:
+                    throw new Exception('Aksi tidak valid atau belum disediakan.');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw new Exception('Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    public function kelolaDataMahasiswa(array $data): array
+    {
+        $action = $data['action'] ?? null;
+
+        try {
+            switch ($action) {
+                case 'view':
+                    // Jika terdapat parameter id, ambil detail satu data mahasiswa.
+                    if (isset($data['mahasiswa_id'])) {
+                        $mahasiswa = Mahasiswa::with(['Prodi' => function ($query) {
+                            $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
+                        }])
+                            ->select('mahasiswa_id', 'npm', 'name', 'email', 'prodi_id')
+                            ->findOrFail($data['mahasiswa_id']);
+                        return [
+                            'data'    => $mahasiswa,
+                            'message' => 'Data mahasiswa berhasil diambil.'
+                        ];
+                    } else {
+                        $mahasiswas = Mahasiswa::with(['prodi' => function ($query) {
+                            $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
+                        }])
+                            ->select('mahasiswa_id', 'npm', 'name', 'email', 'prodi_id')
+                            ->get();
+                        return [
+                            'data'    => $mahasiswas,
+                            'message' => 'Semua data mahasiswa berhasil diambil.'
+                        ];
+                    }
+                    break;
+
+                case 'store':
+                    // Tambah data Mahasiswa baru.
+                    DB::beginTransaction();
+                    $mahasiswa = Mahasiswa::create([
+                        'npm'      => $data['npm'],
+                        'name'     => $data['name'],
+                        'email'    => $data['email'],
+                        'prodi_id' => $data['prodi_id'],
+                    ]);
+                    DB::commit();
+
+                    return [
+                        'data'    => $mahasiswa,
+                        'message' => 'Data mahasiswa berhasil dibuat.'
+                    ];
+                    break;
+
+                case 'update':
+                    if (!isset($data['mahasiswa_id'])) {
+                        return ['message' => 'ID mahasiswa tidak ditemukan untuk update.'];
+                    }
+
+                    // Perbarui data mahasiswa.
+                    DB::beginTransaction();
+                    $mahasiswa = Mahasiswa::with('prodi')->findOrFail($data['mahasiswa_id']);
+
+                    // Ambil prodi_id dari request atau gunakan yang sudah ada
+                    $prodi_id = $data['prodi_id'] ?? $mahasiswa->prodi->prodi_id;
+
+                    // Pastikan prodi yang dikirimkan ada dalam database sebelum update
+                    if (!Prodi::where('prodi_id', $prodi_id)->exists()) {
+                        return ['message' => 'Prodi yang diberikan tidak valid atau tidak ditemukan.'];
+                    }
+
+                    $mahasiswa->update([
+                        'npm'     => $data['npm']     ?? $mahasiswa->npm,
+                        'name'     => $data['name']     ?? $mahasiswa->name,
+                        'email'    => $data['email']    ?? $mahasiswa->email,
+                        'prodi_id' => $prodi_id
+                    ]);
+                    $mahasiswa = $mahasiswa->fresh('prodi');
+
+                    DB::commit();
+
+                    return [
+                        'data'    => $mahasiswa,
+                        'message' => 'Data mahasiswa berhasil diperbarui.'
+                    ];
+                    break;
+
+                case 'delete':
+                    // Hapus akun Dosen berdasarkan id.
+                    if (!isset($data['mahasiswa_id'])) {
+                        return ['message' => 'ID mahasiswa tidak ditemukan untuk dihapus.'];
+                    }
+
+                    DB::beginTransaction();
+
+                    $mahasiswa = Mahasiswa::findOrFail($data['mahasiswa_id']);
+                    $mahasiswa->delete();
+                    DB::commit();
+                    return [
+                        'message' => 'Data mahasiswa berhasil dihapus.'
                     ];
                     break;
 
