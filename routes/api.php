@@ -68,6 +68,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/kelola-data-mahasiswa', [AdminProdiController::class, 'kelolaDataMahasiswa']);
         Route::delete('/kelola-data-mahasiswa', [AdminProdiController::class, 'kelolaDataMahasiswa']);
     });
+    // Kelola data mata kuliah
+    Route::middleware(['role:Admin Prodi', 'permission:Mengelola data mata kuliah'])->group(function () {
+        Route::get('/kelola-data-mata-kuliah', [AdminProdiController::class, 'kelolaDataMataKuliah']);
+        Route::post('/kelola-data-mata-kuliah', [AdminProdiController::class, 'kelolaDataMataKuliah']);
+        Route::put('/kelola-data-mata-kuliah', [AdminProdiController::class, 'kelolaDataMataKuliah']);
+        Route::delete('/kelola-data-mata-kuliah', [AdminProdiController::class, 'kelolaDataMataKuliah']);
+    });
 
     // // Kaprodi
     // Route::middleware(['role:kaprodi'])->group(function () {

@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MahasiswaRequest;
+use App\Http\Requests\MataKuliahRequest;
 use App\Http\Requests\StoreAkunRequest;
-use Illuminate\Http\Request;
 use App\Services\AdminProdiService;
 
 class AdminProdiController extends Controller
@@ -90,10 +90,26 @@ class AdminProdiController extends Controller
         return response()->json($result, $statusCode);
     }
 
-    // Endpoint untuk mengelola data mahasiswa, mata kuliah, CPL, dan CPMK
-    public function manageData(Request $request)
+    /**
+     * Endpoint untuk mengelola data Mata Kuliah.
+     * Untuk setiap operasi CRUD, parameter 'action' harus disertakan.
+     *
+     * @param \App\Http\Requests\MataKuliahRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function kelolaDataMataKuliah(MataKuliahRequest $request)
     {
-        $result = $this->adminProdiService->manageData($request->all());
-        return response()->json($result);
+        // Dapatkan data tervalidasi, lalu tambahkan key 'action' (misalnya dikirim via query atau body)
+        $data = $request->validated();
+        // Pastikan key 'action' diatur melalui request (misalnya store, update, view, delete)
+        $data['action'] = $request->input('action');
+
+        $result = $this->adminProdiService->kelolaDataMataKuliah($data);
+
+        // Status code ditetapkan berdasarkan jenis aksi, 201 untuk store, 200 untuk view, update, delete
+        $statusCode = in_array($data['action'], ['store']) ? 201 : 200;
+
+        return response()->json($result, $statusCode);
     }
+
 }

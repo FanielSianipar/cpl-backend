@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Mahasiswa;
+use App\Models\MataKuliah;
 use App\Models\Prodi;
 use App\Models\User;
 use Exception;
@@ -291,7 +292,7 @@ class AdminProdiService
                     break;
 
                 case 'delete':
-                    // Hapus akun Dosen berdasarkan id.
+                    // Hapus data mahasiswa berdasarkan id.
                     if (!isset($data['mahasiswa_id'])) {
                         return ['message' => 'ID mahasiswa tidak ditemukan untuk dihapus.'];
                     }
@@ -315,9 +316,107 @@ class AdminProdiService
         }
     }
 
-    public function manageData(array $data)
+    public function kelolaDataMataKuliah(array $data): array
     {
-        // Logika untuk mengelola data mahasiswa, mata kuliah, CPL, dan CPMK sekaligus
-        return ['message' => 'Data processed'];
+        $action = $data['action'] ?? null;
+
+        try {
+            switch ($action) {
+                case 'view':
+                    // Jika terdapat parameter id, ambil detail satu data mata kuliah.
+                    if (isset($data['mata_kuliah_id'])) {
+                        $mataKuliah = MataKuliah::with(['Prodi' => function ($query) {
+                            $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
+                        }])
+                            ->select('mata_kuliah_id', 'kode_mata_kuliah', 'nama_mata_kuliah', 'prodi_id')
+                            ->findOrFail($data['mata_kuliah_id']);
+                        return [
+                            'data'    => $mataKuliah,
+                            'message' => 'Data mata kuliah berhasil diambil.'
+                        ];
+                    } else {
+                        $mataKuliahs = MataKuliah::with(['prodi' => function ($query) {
+                            $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
+                        }])
+                            ->select('mata_kuliah_id', 'kode_mata_kuliah', 'nama_mata_kuliah', 'prodi_id')
+                            ->get();
+                        return [
+                            'data'    => $mataKuliahs,
+                            'message' => 'Semua data mata kuliah berhasil diambil.'
+                        ];
+                    }
+                    break;
+
+                case 'store':
+                    // Tambah data Mata Kuliah baru.
+                    DB::beginTransaction();
+                    $mataKuliah = MataKuliah::create([
+                        'kode_mata_kuliah'      => $data['kode_mata_kuliah'],
+                        'nama_mata_kuliah'     => $data['nama_mata_kuliah'],
+                        'prodi_id' => $data['prodi_id'],
+                    ]);
+                    DB::commit();
+
+                    return [
+                        'data'    => $mataKuliah,
+                        'message' => 'Data mata kuliah berhasil dibuat.'
+                    ];
+                    break;
+
+                case 'update':
+                    if (!isset($data['mata_kuliah_id'])) {
+                        return ['message' => 'ID mata kuliah tidak ditemukan untuk update.'];
+                    }
+
+                    // Perbarui data mata_kuliah.
+                    DB::beginTransaction();
+                    $mataKuliah = MataKuliah::with('prodi')->findOrFail($data['mata_kuliah_id']);
+
+                    // Ambil prodi_id dari request atau gunakan yang sudah ada
+                    $prodiId = $data['prodi_id'] ?? $mataKuliah->prodi->prodi_id;
+
+                    // Pastikan prodi yang dikirimkan ada dalam database sebelum update
+                    if (!Prodi::where('prodi_id', $prodiId)->exists()) {
+                        return ['message' => 'Prodi yang diberikan tidak valid atau tidak ditemukan.'];
+                    }
+
+                    $mataKuliah->update([
+                        'kode_mata_kuliah'     => $data['kode_mata_kuliah']     ?? $mataKuliah->kode_mata_kuliah,
+                        'nama_mata_kuliah'     => $data['nama_mata_kuliah']     ?? $mataKuliah->nama_mata_kuliah,
+                        'prodi_id' => $prodiId
+                    ]);
+                    $mataKuliah = $mataKuliah->fresh('prodi');
+
+                    DB::commit();
+
+                    return [
+                        'data'    => $mataKuliah,
+                        'message' => 'Data mata kuliah berhasil diperbarui.'
+                    ];
+                    break;
+
+                case 'delete':
+                    // Hapus data mata kuliah berdasarkan id.
+                    if (!isset($data['mata_kuliah_id'])) {
+                        return ['message' => 'ID mata kuliah tidak ditemukan untuk dihapus.'];
+                    }
+
+                    DB::beginTransaction();
+
+                    $mataKuliah = MataKuliah::findOrFail($data['mata_kuliah_id']);
+                    $mataKuliah->delete();
+                    DB::commit();
+                    return [
+                        'message' => 'Data mata kuliah berhasil dihapus.'
+                    ];
+                    break;
+
+                default:
+                    throw new Exception('Aksi tidak valid atau belum disediakan.');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw new Exception('Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 }
