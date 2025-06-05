@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CPL;
 use App\Models\Mahasiswa;
 use App\Models\MataKuliah;
 use App\Models\Prodi;
@@ -408,6 +409,112 @@ class AdminProdiService
                     DB::commit();
                     return [
                         'message' => 'Data mata kuliah berhasil dihapus.'
+                    ];
+                    break;
+
+                default:
+                    throw new Exception('Aksi tidak valid atau belum disediakan.');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw new Exception('Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    public function kelolaDataCpl(array $data): array
+    {
+        $action = $data['action'] ?? null;
+
+        try {
+            switch ($action) {
+                case 'view':
+                    // Jika terdapat parameter id, ambil detail satu data CPL.
+                    if (isset($data['cpl_id'])) {
+                        $cpl = CPL::with(['Prodi' => function ($query) {
+                            $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
+                        }])
+                            ->select('cpl_id', 'kode_cpl', 'nama_cpl', 'deskripsi', 'prodi_id')
+                            ->findOrFail($data['cpl_id']);
+                        return [
+                            'data'    => $cpl,
+                            'message' => 'Data CPL berhasil diambil.'
+                        ];
+                    } else {
+                        $cpls = CPL::with(['prodi' => function ($query) {
+                            $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
+                        }])
+                            ->select('cpl_id', 'kode_cpl', 'nama_cpl', 'deskripsi', 'prodi_id')
+                            ->get();
+                        return [
+                            'data'    => $cpls,
+                            'message' => 'Semua data CPL berhasil diambil.'
+                        ];
+                    }
+                    break;
+
+                case 'store':
+                    // Tambah data CPL baru.
+                    DB::beginTransaction();
+                    $cpl = CPL::create([
+                        'kode_cpl'      => $data['kode_cpl'],
+                        'nama_cpl'     => $data['nama_cpl'],
+                        'deskripsi'     => $data['deskripsi'],
+                        'prodi_id' => $data['prodi_id'],
+                    ]);
+                    DB::commit();
+
+                    return [
+                        'data'    => $cpl,
+                        'message' => 'Data CPL berhasil dibuat.'
+                    ];
+                    break;
+
+                case 'update':
+                    if (!isset($data['cpl_id'])) {
+                        return ['message' => 'ID CPL tidak ditemukan untuk update.'];
+                    }
+
+                    // Perbarui data CPL.
+                    DB::beginTransaction();
+                    $cpl = CPL::with('prodi')->findOrFail($data['cpl_id']);
+
+                    // Ambil prodi_id dari request atau gunakan yang sudah ada
+                    $prodiId = $data['prodi_id'] ?? $cpl->prodi->prodi_id;
+
+                    // Pastikan prodi yang dikirimkan ada dalam database sebelum update
+                    if (!Prodi::where('prodi_id', $prodiId)->exists()) {
+                        return ['message' => 'Prodi yang diberikan tidak valid atau tidak ditemukan.'];
+                    }
+
+                    $cpl->update([
+                        'kode_cpl'     => $data['kode_cpl']     ?? $cpl->kode_cpl,
+                        'nama_cpl'     => $data['nama_cpl']     ?? $cpl->nama_cpl,
+                        'deskripsi'     => $data['deskripsi']     ?? $cpl->deskripsi,
+                        'prodi_id' => $prodiId
+                    ]);
+                    $cpl = $cpl->fresh('prodi');
+
+                    DB::commit();
+
+                    return [
+                        'data'    => $cpl,
+                        'message' => 'Data CPL berhasil diperbarui.'
+                    ];
+                    break;
+
+                case 'delete':
+                    // Hapus data CPL berdasarkan id.
+                    if (!isset($data['cpl_id'])) {
+                        return ['message' => 'ID CPL tidak ditemukan untuk dihapus.'];
+                    }
+
+                    DB::beginTransaction();
+
+                    $cpl = CPL::findOrFail($data['cpl_id']);
+                    $cpl->delete();
+                    DB::commit();
+                    return [
+                        'message' => 'Data CPL berhasil dihapus.'
                     ];
                     break;
 

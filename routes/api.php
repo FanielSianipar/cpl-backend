@@ -75,6 +75,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/kelola-data-mata-kuliah', [AdminProdiController::class, 'kelolaDataMataKuliah']);
         Route::delete('/kelola-data-mata-kuliah', [AdminProdiController::class, 'kelolaDataMataKuliah']);
     });
+    // Kelola data cpl
+    Route::middleware(['role:Admin Prodi', 'permission:Mengelola data CPL'])->group(function () {
+        Route::get('/kelola-data-cpl', [AdminProdiController::class, 'kelolaDataCpl']);
+        Route::post('/kelola-data-cpl', [AdminProdiController::class, 'kelolaDataCpl']);
+        Route::put('/kelola-data-cpl', [AdminProdiController::class, 'kelolaDataCpl']);
+        Route::delete('/kelola-data-cpl', [AdminProdiController::class, 'kelolaDataCpl']);
+    });
 
     // // Kaprodi
     // Route::middleware(['role:kaprodi'])->group(function () {

@@ -33,4 +33,8 @@ class Prodi extends Model
     {
         return $this->hasMany(MataKuliah::class, 'prodi_id', 'prodi_id');
     }
+    public function cpls()
+    {
+        return $this->hasMany(CPL::class, 'prodi_id', 'prodi_id');
+    }
 }
