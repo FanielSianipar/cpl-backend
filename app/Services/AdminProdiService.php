@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CPL;
+use App\Models\CPMK;
 use App\Models\Mahasiswa;
 use App\Models\MataKuliah;
 use App\Models\Prodi;
@@ -515,6 +516,112 @@ class AdminProdiService
                     DB::commit();
                     return [
                         'message' => 'Data CPL berhasil dihapus.'
+                    ];
+                    break;
+
+                default:
+                    throw new Exception('Aksi tidak valid atau belum disediakan.');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw new Exception('Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    public function kelolaDataCpmk(array $data): array
+    {
+        $action = $data['action'] ?? null;
+
+        try {
+            switch ($action) {
+                case 'view':
+                    // Jika terdapat parameter id, ambil detail satu data CPMK.
+                    if (isset($data['cpmk_id'])) {
+                        $cpmk = CPMK::with(['Prodi' => function ($query) {
+                            $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
+                        }])
+                            ->select('cpmk_id', 'kode_cpmk', 'nama_cpmk', 'deskripsi', 'prodi_id')
+                            ->findOrFail($data['cpmk_id']);
+                        return [
+                            'data'    => $cpmk,
+                            'message' => 'Data CPMK berhasil diambil.'
+                        ];
+                    } else {
+                        $cpmks = CPMK::with(['prodi' => function ($query) {
+                            $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
+                        }])
+                            ->select('cpmk_id', 'kode_cpmk', 'nama_cpmk', 'deskripsi', 'prodi_id')
+                            ->get();
+                        return [
+                            'data'    => $cpmks,
+                            'message' => 'Semua data CPMK berhasil diambil.'
+                        ];
+                    }
+                    break;
+
+                case 'store':
+                    // Tambah data CPMK baru.
+                    DB::beginTransaction();
+                    $cpmk = CPMK::create([
+                        'kode_cpmk'      => $data['kode_cpmk'],
+                        'nama_cpmk'     => $data['nama_cpmk'],
+                        'deskripsi'     => $data['deskripsi'],
+                        'prodi_id' => $data['prodi_id'],
+                    ]);
+                    DB::commit();
+
+                    return [
+                        'data'    => $cpmk,
+                        'message' => 'Data CPMK berhasil dibuat.'
+                    ];
+                    break;
+
+                case 'update':
+                    if (!isset($data['cpmk_id'])) {
+                        return ['message' => 'ID CPMK tidak ditemukan untuk update.'];
+                    }
+
+                    // Perbarui data CPMK.
+                    DB::beginTransaction();
+                    $cpmk = CPMK::with('prodi')->findOrFail($data['cpmk_id']);
+
+                    // Ambil prodi_id dari request atau gunakan yang sudah ada
+                    $prodiId = $data['prodi_id'] ?? $cpmk->prodi->prodi_id;
+
+                    // Pastikan prodi yang dikirimkan ada dalam database sebelum update
+                    if (!Prodi::where('prodi_id', $prodiId)->exists()) {
+                        return ['message' => 'Prodi yang diberikan tidak valid atau tidak ditemukan.'];
+                    }
+
+                    $cpmk->update([
+                        'kode_cpmk'     => $data['kode_cpmk']     ?? $cpmk->kode_cpmk,
+                        'nama_cpmk'     => $data['nama_cpmk']     ?? $cpmk->nama_cpmk,
+                        'deskripsi'     => $data['deskripsi']     ?? $cpmk->deskripsi,
+                        'prodi_id' => $prodiId
+                    ]);
+                    $cpmk = $cpmk->fresh('prodi');
+
+                    DB::commit();
+
+                    return [
+                        'data'    => $cpmk,
+                        'message' => 'Data CPMK berhasil diperbarui.'
+                    ];
+                    break;
+
+                case 'delete':
+                    // Hapus data CPMK berdasarkan id.
+                    if (!isset($data['cpmk_id'])) {
+                        return ['message' => 'ID CPMK tidak ditemukan untuk dihapus.'];
+                    }
+
+                    DB::beginTransaction();
+
+                    $cpmk = CPMK::findOrFail($data['cpmk_id']);
+                    $cpmk->delete();
+                    DB::commit();
+                    return [
+                        'message' => 'Data CPMK berhasil dihapus.'
                     ];
                     break;
 

@@ -37,4 +37,9 @@ class Prodi extends Model
     {
         return $this->hasMany(CPL::class, 'prodi_id', 'prodi_id');
     }
+
+    public function cpmks()
+    {
+        return $this->hasMany(CPL::class, 'prodi_id', 'prodi_id');
+    }
 }

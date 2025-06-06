@@ -82,6 +82,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/kelola-data-cpl', [AdminProdiController::class, 'kelolaDataCpl']);
         Route::delete('/kelola-data-cpl', [AdminProdiController::class, 'kelolaDataCpl']);
     });
+    // Kelola data cpmk
+    Route::middleware(['role:Admin Prodi', 'permission:Mengelola data CPMK'])->group(function () {
+        Route::get('/kelola-data-cpmk', [AdminProdiController::class, 'kelolaDataCpmk']);
+        Route::post('/kelola-data-cpmk', [AdminProdiController::class, 'kelolaDataCpmk']);
+        Route::put('/kelola-data-cpmk', [AdminProdiController::class, 'kelolaDataCpmk']);
+        Route::delete('/kelola-data-cpmk', [AdminProdiController::class, 'kelolaDataCpmk']);
+    });
 
     // // Kaprodi
     // Route::middleware(['role:kaprodi'])->group(function () {
