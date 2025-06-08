@@ -24,4 +24,14 @@ class CPMK extends Model
     {
         return $this->belongsTo(Prodi::class, 'prodi_id', 'prodi_id');
     }
+
+    /**
+     * Relasi many-to-many ke Mata Kuliah.
+     */
+    public function mataKuliahs()
+    {
+        return $this->belongsToMany(MataKuliah::class, 'mata_kuliah_cpmk', 'cpmk_id', 'mata_kuliah_id')
+            ->withPivot('percentage', 'cpl_id')
+            ->withTimestamps();
+    }
 }

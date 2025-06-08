@@ -633,4 +633,147 @@ class AdminProdiService
             throw new Exception('Terjadi kesalahan: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Mengelola pemetaan CPL pada sebuah mata kuliah.
+     *
+     * Format input pada $data:
+     * [
+     *   'action' => 'store'|'view'|'update'|'delete',
+     *   'mata_kuliah_id' => (int),
+     *   // Untuk store dan update:
+     *   'cpls' => [
+     *         [ 'cpl_id' => (int), 'bobot' => (float) ],
+     *         ...
+     *   ]
+     * ]
+     *
+     * @param  array  $data
+     * @return array
+     */
+    public function pemetaanCpl(array $data): array
+    {
+        if (!isset($data['action'])) {
+            return ['message' => 'Action tidak ditemukan.'];
+        }
+
+        switch ($data['action']) {
+            case 'view':
+                // Jika ada ID mata kuliah, tampilkan pemetaan CPL untuk mata kuliah tersebut.
+                if (isset($data['mata_kuliah_id'])) {
+                    $mataKuliah = MataKuliah::with('cpls')->find($data['mata_kuliah_id']);
+                    if (!$mataKuliah) {
+                        return ['message' => 'Mata kuliah tidak ditemukan.'];
+                    }
+                    return [
+                        'data'    => $mataKuliah->cpls,
+                        'message' => 'Data pemetaan CPL berhasil diambil.'
+                    ];
+                }
+                return ['message' => 'ID mata kuliah diperlukan untuk aksi view.'];
+                break;
+
+            case 'store':
+                // Untuk create, validasi adanya data dan cek total bobot harus 100%
+                if (!isset($data['mata_kuliah_id']) || !isset($data['cpls'])) {
+                    return ['message' => 'Mata kuliah dan data CPL harus disertakan untuk aksi store.'];
+                }
+                return $this->syncPemetaanCpl($data['mata_kuliah_id'], $data['cpls'], 'store');
+                break;
+
+            case 'update':
+                // Untuk update, kita lakukan sinkronisasi ulang dengan data baru.
+                if (!isset($data['mata_kuliah_id']) || !isset($data['cpls'])) {
+                    return ['message' => 'Mata kuliah dan data CPL harus disertakan untuk aksi update.'];
+                }
+                return $this->syncPemetaanCpl($data['mata_kuliah_id'], $data['cpls'], 'update');
+                break;
+
+            case 'delete':
+                // Untuk delete, keluarkan seluruh mapping CPL untuk mata kuliah tertentu.
+                if (!isset($data['mata_kuliah_id'])) {
+                    return ['message' => 'ID mata kuliah diperlukan untuk aksi delete.'];
+                }
+                try {
+                    DB::beginTransaction();
+                    $mataKuliah = MataKuliah::findOrFail($data['mata_kuliah_id']);
+                    $mataKuliah->cpls()->detach();
+                    DB::commit();
+                    return ['message' => 'Pemetaan CPL berhasil dihapus.'];
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    return ['message' => 'Pemetaan CPL gagal dihapus: ' . $e->getMessage()];
+                }
+                break;
+            default:
+                return ['message' => 'Action tidak dikenali.'];
+        }
+    }
+
+    /**
+     * Fungsi sinkronisasi pemetaan CPL.
+     *
+     * Melakukan validasi untuk memastikan total bobot CPL = 100%
+     * dan kemudian melakukan sinkronisasi (create atau update) melalui relasi many-to-many.
+     *
+     * @param int   $mataKuliahId
+     * @param array $cpls         Array berisi data CPL dengan key 'cpl_id' dan 'bobot'
+     * @param string $mode        'store' atau 'update'
+     * @return array
+     */
+    protected function syncPemetaanCpl(int $mataKuliahId, array $cpls, string $mode): array
+    {
+        DB::beginTransaction();
+        try {
+            $mataKuliah = MataKuliah::findOrFail($mataKuliahId);
+            $totalBobot = 0;
+            $syncData = [];
+
+            // Hitung total bobot dan persiapkan data sync
+            foreach ($cpls as $item) {
+                if (!isset($item['cpl_id']) || !isset($item['bobot'])) {
+                    throw new \Exception('Data CPL tidak lengkap.');
+                }
+                $totalBobot += $item['bobot'];
+                $syncData[$item['cpl_id']] = ['bobot' => $item['bobot']];
+            }
+
+            // Validasi: total bobot harus 100%
+            if (abs($totalBobot - 100.00) > 0.01) {
+                throw new \Illuminate\Validation\ValidationException(
+                    validator: validator([], []),
+                    response: response()->json(['message' => "Total bobot CPL harus 100%"], 422)
+                );
+            }
+
+            // Jika action store, periksa apakah mapping sudah ada.
+            if ($mode === 'store' && $mataKuliah->cpls()->exists()) {
+                throw new \Illuminate\Validation\ValidationException(
+                    validator: validator([], []),
+                    response: response()->json(['message' => "Mapping CPL sudah ada untuk mata kuliah ini. Gunakan action update untuk merubah data."], 422)
+                );
+            }
+
+            // Lakukan sinkronisasi (sync) data ke tabel pivot
+            $mataKuliah->cpls()->sync($syncData);
+
+            DB::commit();
+
+            // Muat ulang relasi untuk response
+            $mataKuliah->load('cpls');
+
+            return [
+                'data'    => $mataKuliah->cpls,
+                'message' => "Pemetaan CPL berhasil " . ($mode === 'store' ? 'ditambahkan.' : 'diperbarui.')
+            ];
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            DB::rollBack();
+            // Mengembalikan pesan error sesuai dengan response pada exception
+            $data = $ve->getResponse()->getData();
+            return ['message' => $data->message];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return ['message' => 'Pemetaan CPL gagal: ' . $e->getMessage()];
+        }
+    }
 }

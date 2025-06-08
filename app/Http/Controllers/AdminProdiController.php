@@ -7,6 +7,7 @@ use App\Http\Requests\CplRequest;
 use App\Http\Requests\CpmkRequest;
 use App\Http\Requests\MahasiswaRequest;
 use App\Http\Requests\MataKuliahRequest;
+use App\Http\Requests\PemetaanCplRequest;
 use App\Http\Requests\StoreAkunRequest;
 use App\Services\AdminProdiService;
 
@@ -158,4 +159,23 @@ class AdminProdiController extends Controller
         return response()->json($result, $statusCode);
     }
 
+    public function pemetaanCpl(PemetaanCplRequest $request)
+    {
+        // Dapatkan data tervalidasi, lalu tambahkan key 'action' (misalnya dikirim via query atau body)
+        $data = $request->validated();
+        // Pastikan key 'action' diatur melalui request (misalnya store, update, view, delete)
+        $data['action'] = $request->input('action');
+
+        $result = $this->adminProdiService->pemetaanCpl($data);
+
+        // Status code ditetapkan berdasarkan jenis aksi, 201 untuk store, 200 untuk view, update, delete
+        $statusCode = in_array($data['action'], ['store']) ? 201 : 200;
+
+        // Jika pesan tidak mengandung kata "berhasil" (artinya terjadi error), override status code menjadi 422
+        if (stripos($result['message'], 'berhasil') === false) {
+            $statusCode = 422;
+        }
+
+        return response()->json($result, $statusCode);
+    }
 }

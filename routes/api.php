@@ -89,6 +89,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/kelola-data-cpmk', [AdminProdiController::class, 'kelolaDataCpmk']);
         Route::delete('/kelola-data-cpmk', [AdminProdiController::class, 'kelolaDataCpmk']);
     });
+    // Pemetaan cpl
+    Route::middleware(['role:Admin Prodi', 'permission:Melakukan pemetaan CPL'])->group(function () {
+        Route::get('/pemetaan-cpl', [AdminProdiController::class, 'pemetaanCpl']);
+        Route::post('/pemetaan-cpl', [AdminProdiController::class, 'pemetaanCpl']);
+        Route::put('/pemetaan-cpl', [AdminProdiController::class, 'pemetaanCpl']);
+        Route::delete('/pemetaan-cpl', [AdminProdiController::class, 'pemetaanCpl']);
+    });
 
     // // Kaprodi
     // Route::middleware(['role:kaprodi'])->group(function () {
