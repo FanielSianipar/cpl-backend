@@ -635,7 +635,7 @@ class AdminProdiService
     }
 
     /**
-     * Mengelola pemetaan CPL pada sebuah mata kuliah.
+     * Mengelola pemetaan CPMK pada sebuah mata kuliah.
      *
      * Format input pada $data:
      * [
@@ -774,6 +774,197 @@ class AdminProdiService
         } catch (\Exception $e) {
             DB::rollBack();
             return ['message' => 'Pemetaan CPL gagal: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Mengelola pemetaan CPL pada sebuah mata kuliah.
+     *
+     * Format input pada $data:
+     * [
+     *   'action' => 'store'|'view'|'update'|'delete',
+     *   'mata_kuliah_id' => (int),
+     *   // Untuk store dan update:
+     *   'cpls' => [
+     *         [ 'cpl_id' => (int), 'bobot' => (float) ],
+     *         ...
+     *   ]
+     * ]
+     *
+     * @param  array  $data
+     * @return array
+     */
+    public function pemetaanCpmk(array $data): array
+    {
+        if (!isset($data['action'])) {
+            return ['message' => 'Action tidak ditemukan.'];
+        }
+
+        switch ($data['action']) {
+            case 'view':
+                if (isset($data['mata_kuliah_id'])) {
+                    $mataKuliah = MataKuliah::with('cpmks')->find($data['mata_kuliah_id']);
+                    if (!$mataKuliah) {
+                        return ['message' => 'Mata kuliah tidak ditemukan.'];
+                    }
+                    return [
+                        'data'    => $mataKuliah->cpmks,
+                        'message' => 'Data pemetaan CPMK berhasil diambil.'
+                    ];
+                }
+                return ['message' => 'ID mata kuliah diperlukan untuk aksi view.'];
+                break;
+
+            case 'store':
+                if (!isset($data['mata_kuliah_id']) || !isset($data['cpmks'])) {
+                    return ['message' => 'Mata kuliah dan data CPMK harus disertakan untuk aksi store.'];
+                }
+                return $this->syncPemetaanCpmk($data['mata_kuliah_id'], $data['cpmks'], 'store');
+                break;
+
+            case 'update':
+                if (!isset($data['mata_kuliah_id']) || !isset($data['cpmks'])) {
+                    return ['message' => 'Mata kuliah dan data CPMK harus disertakan untuk aksi update.'];
+                }
+                return $this->syncPemetaanCpmk($data['mata_kuliah_id'], $data['cpmks'], 'update');
+                break;
+
+            case 'delete':
+                if (!isset($data['mata_kuliah_id'])) {
+                    return ['message' => 'ID mata kuliah diperlukan untuk aksi delete.'];
+                }
+                try {
+                    DB::beginTransaction();
+                    $mataKuliah = MataKuliah::findOrFail($data['mata_kuliah_id']);
+
+                    // Dapatkan relasi untuk mengambil nama kolom foreign key secara dinamis
+                    $relation = $mataKuliah->cpmks();
+                    $foreignPivotKey = $relation->getForeignPivotKeyName();  // biasany "mata_kuliah_id"
+                    $relatedPivotKey = $relation->getRelatedPivotKeyName();    // biasanya "cpmk_id"
+
+                    if (isset($data['cpmks']) && is_array($data['cpmks'])) {
+                        foreach ($data['cpmks'] as $item) {
+                            if (!isset($item['cpmk_id']) || !isset($item['cpl_id'])) {
+                                throw new \Exception('Data cpmks tidak lengkap untuk delete.');
+                            }
+                            // Secara eksplisit gunakan whereRaw untuk memastikan kondisi ketat
+                            $deleted = $relation->newPivotQuery()
+                                ->where($foreignPivotKey, (int)$data['mata_kuliah_id'])
+                                ->where($relatedPivotKey, (int)$item['cpmk_id'])
+                                ->where('cpl_id', (int)$item['cpl_id'])
+                                ->delete();
+                            // Opsional: periksa jika $deleted tidak sama dengan 1, bisa di-log sebagai peringatan.
+                        }
+                    } else {
+                        // Jika tidak ada field "cpmks", tidak bisa menghapus mapping untuk mata kuliah tersebut.
+                        return ['message' => 'Pemetaan CPMK gagal dihapus.'];
+                    }
+
+                    DB::commit();
+                    return ['message' => 'Pemetaan CPMK berhasil dihapus.'];
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    return ['message' => 'Pemetaan CPMK gagal dihapus: ' . $e->getMessage()];
+                }
+                break;
+
+            default:
+                return ['message' => 'Action tidak dikenali.'];
+        }
+    }
+
+    /**
+     * Fungsi sinkronisasi pemetaan CPMK.
+     *
+     * Melakukan validasi untuk memastikan total bobot CPMK = 100%
+     * dan kemudian melakukan sinkronisasi (create atau update) melalui relasi many-to-many.
+     *
+     * @param int   $mataKuliahId
+     * @param array $cpmks         Array berisi data CPMK dengan key 'cpmk_id' dan 'bobot'
+     * @param string $mode        'store' atau 'update'
+     * @return array
+     */
+    protected function syncPemetaanCpmk(int $mataKuliahId, array $cpmks, string $mode): array
+    {
+        DB::beginTransaction();
+        try {
+            $mataKuliah = MataKuliah::findOrFail($mataKuliahId);
+            $syncData = [];  // Array untuk menyiapkan data attach, key adalah cpmk_id
+            $grouped   = []; // Mengelompokkan total bobot per CPL
+
+            foreach ($cpmks as $item) {
+                if (!isset($item['cpmk_id']) || !isset($item['cpl_id']) || !isset($item['bobot'])) {
+                    throw new \Exception('Data CPMK tidak lengkap.');
+                }
+                $cplId = $item['cpl_id'];
+                if (!isset($grouped[$cplId])) {
+                    $grouped[$cplId] = 0;
+                }
+                $grouped[$cplId] += $item['bobot'];
+                // Siapkan data untuk attach; Gunakan cpmk_id sebagai key
+                $syncData[$item['cpmk_id']] = [
+                    'cpl_id' => $cplId,
+                    'bobot'  => $item['bobot']
+                ];
+            }
+
+            // Ambil mapping CPL yang sudah terpasang pada mata kuliah (relasi pivot)
+            $existingCplMappings = $mataKuliah->cpls()->get()->keyBy('cpl_id');
+
+            foreach ($grouped as $cplId => $sumBobot) {
+                if (!isset($existingCplMappings[$cplId])) {
+                    throw new \Illuminate\Validation\ValidationException(
+                        validator: validator([], []),
+                        response: response()->json([
+                            'message' => "Mapping CPL untuk cpl_id $cplId tidak ditemukan pada mata kuliah ini."
+                        ], 422)
+                    );
+                }
+
+                $cplBobot = $existingCplMappings[$cplId]->pivot->bobot;
+                if ($sumBobot != $cplBobot) {
+                    throw new \Illuminate\Validation\ValidationException(
+                        validator: validator([], []),
+                        response: response()->json([
+                            'message' => "Total bobot CPMK untuk CPL $cplId tidak sama dengan bobot CPL yang ditetapkan."
+                        ], 422)
+                    );
+                }
+            }
+
+            if ($mode === 'store') {
+                // Pada mode store, tambahkan mapping baru tanpa menghapus yang sudah ada
+                $mataKuliah->cpmks()->attach($syncData);
+            } else { // mode update:
+                // Lakukan update hanya untuk CPL yang terlibat pada payload
+                // Ambil daftar cpl_id dari payload
+                $cplIdsToUpdate = array_keys($grouped);
+                // Hapus mapping lama pada pivot untuk CPL yang terkait.
+                // Karena detach() dari relasi Eloquent menghapus berdasarkan cpmk_id,
+                // untuk update spesifik berdasarkan cpl_id, kita gunakan query manual pada pivot.
+                DB::table('cpmk_mata_kuliah')
+                    ->where('mata_kuliah_id', $mataKuliahId)
+                    ->whereIn('cpl_id', $cplIdsToUpdate)
+                    ->delete();
+                // Kemudian, attach data baru
+                $mataKuliah->cpmks()->attach($syncData);
+            }
+
+            DB::commit();
+
+            // Reload relasi menggunakan Eloquent
+            $mataKuliah->load('cpmks');
+            return [
+                'data'    => $mataKuliah->cpmks,
+                'message' => "Pemetaan CPMK berhasil " . ($mode === 'store' ? 'ditambahkan.' : 'diperbarui.')
+            ];
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            DB::rollBack();
+            $data = $ve->getResponse()->getData();
+            return ['message' => $data->message];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return ['message' => 'Pemetaan CPMK gagal: ' . $e->getMessage()];
         }
     }
 }

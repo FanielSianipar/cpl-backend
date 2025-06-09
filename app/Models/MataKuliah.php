@@ -42,6 +42,7 @@ class MataKuliah extends Model
     {
         return $this->belongsToMany(CPMK::class, 'cpmk_mata_kuliah', 'mata_kuliah_id', 'cpmk_id')
             ->withPivot('bobot', 'cpl_id')
+            ->using(MataKuliahCpmkPivot::class)
             ->withTimestamps();
     }
 }
