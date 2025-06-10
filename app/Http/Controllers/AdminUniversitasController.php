@@ -4,9 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProdiRequest;
 use App\Http\Requests\StoreAkunRequest;
-use App\Models\Prodi;
 use App\Services\AdminUniversitasService;
-use Illuminate\Http\Request;
 
 class AdminUniversitasController extends Controller
 {
@@ -49,37 +47,22 @@ class AdminUniversitasController extends Controller
      *
      * Ekspektasi: Request mengandung parameter 'action' untuk menentukan operasi CRUD.
      *
-     * @param Request $request
+     * @param StoreAkunRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function viewAkunAdminUniversitas(StoreAkunRequest $request)
+    public function kelolaAkunAdminUniversitas(StoreAkunRequest $request)
     {
-        try {
-            $data = array_merge($request->all(), ['action' => 'view']);
-            $result = $this->adminUniversitasService->kelolaAkunAdminUniversitas($data);
+        // Dapatkan data tervalidasi, lalu tambahkan key 'action' (misalnya dikirim via query atau body)
+        $data = $request->validated();
+        // Pastikan key 'action' diatur melalui request (misalnya store, update, view, delete)
+        $data['action'] = $request->input('action');
 
-            return response()->json($result, 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
+        $result = $this->adminUniversitasService->kelolaAkunAdminUniversitas($data);
 
-    public function storeAkunAdminUniversitas(StoreAkunRequest $request)
-    {
-        try {
-            $data = $request->validated();
-            $result = $this->adminUniversitasService->kelolaAkunAdminUniversitas($data);
+        // Status code ditetapkan berdasarkan jenis aksi, 201 untuk store, 200 untuk view, update, delete
+        $statusCode = in_array($data['action'], ['store']) ? 201 : 200;
 
-            // Sesuaikan status response: 201 untuk store, 200 untuk view, update, delete
-            $status = in_array($data['action'], ['store']) ? 201 : 200;
-            return response()->json($result, $status);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json($result, $statusCode);
     }
 
     /**
@@ -87,7 +70,7 @@ class AdminUniversitasController extends Controller
      *
      * Ekspektasi: Request mengandung parameter 'action' untuk menentukan operasi CRUD.
      *
-     * @param Request $request
+     * @param StoreAkunRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function viewAkunAdminProdi(StoreAkunRequest $request)

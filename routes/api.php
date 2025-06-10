@@ -29,10 +29,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
     // Kelola akun admin universitas
     Route::middleware(['role:Admin Universitas', 'permission:Mengelola akun admin universitas'])->group(function () {
-        Route::get('/kelola-akun-admin-universitas', [AdminUniversitasController::class, 'viewAkunAdminUniversitas']);
-        Route::post('/kelola-akun-admin-universitas', [AdminUniversitasController::class, 'storeAkunAdminUniversitas']);
-        Route::put('/kelola-akun-admin-universitas', [AdminUniversitasController::class, 'storeAkunAdminUniversitas']);
-        Route::delete('/kelola-akun-admin-universitas', [AdminUniversitasController::class, 'storeAkunAdminUniversitas']);
+        Route::get('/kelola-akun-admin-universitas', [AdminUniversitasController::class, 'kelolaAkunAdminUniversitas']);
+        Route::post('/kelola-akun-admin-universitas', [AdminUniversitasController::class, 'kelolaAkunAdminUniversitas']);
+        Route::put('/kelola-akun-admin-universitas', [AdminUniversitasController::class, 'kelolaAkunAdminUniversitas']);
+        Route::delete('/kelola-akun-admin-universitas', [AdminUniversitasController::class, 'kelolaAkunAdminUniversitas']);
     });
     // Kelola akun admin prodi
     Route::middleware(['role:Admin Universitas', 'permission:Mengelola akun admin prodi'])->group(function () {

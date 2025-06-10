@@ -6,6 +6,7 @@ use App\Models\Prodi;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Exception;
 
 class AdminUniversitasService
@@ -109,15 +110,14 @@ class AdminUniversitasService
      * @return array
      * @throws Exception
      */
-    public function kelolaAkunAdminUniversitas(array $data)
+
+    public function kelolaAkunAdminUniversitas(array $data): array
     {
         $action = $data['action'] ?? null;
 
         try {
             switch ($action) {
                 case 'view':
-                    // Jika terdapat parameter id, ambil data satu akun.
-                    // Jika tidak, ambil keseluruhan akun dengan role admin universitas.
                     if (isset($data['id'])) {
                         $user = User::role('Admin Universitas')->findOrFail($data['id']);
                         return [
@@ -127,6 +127,8 @@ class AdminUniversitasService
                     } else {
                         $users = User::role('Admin Universitas')
                             ->where('id', '!=', auth()->id())
+                            ->with('prodi')
+                            ->select('id', 'name', 'email')
                             ->get();
                         return [
                             'data'    => $users,
@@ -136,18 +138,20 @@ class AdminUniversitasService
                     break;
 
                 case 'store':
-                    // Tambah akun Admin Universitas baru.
                     DB::beginTransaction();
 
-                    $user = new User();
-                    $user->name     = $data['name'];
-                    $user->email    = $data['email'];
-                    $user->password = Hash::make($data['password']);
-                    $user->save();
-                    DB::commit();
+                    // Buat user baru dengan Eloquent ORM.
+                    $user = User::create([
+                        'name'     => $data['name'],
+                        'email'    => $data['email'],
+                        'password' => bcrypt($data['password']),
+                        'remember_token' => Str::random(10),
+                    ]);
 
-                    // Assign role 'admin universitas' menggunakan Spatie Permission.
+                    // Assign role 'Admin Universitas'
                     $user->assignRole('Admin Universitas');
+
+                    DB::commit();
 
                     return [
                         'data'    => $user,
@@ -157,24 +161,18 @@ class AdminUniversitasService
 
                 case 'update':
                     if (!isset($data['id'])) {
-                        return [
-                            'message' => 'ID akun tidak ditemukan untuk update.'
-                        ];
+                        return ['message' => 'ID akun tidak ditemukan untuk update.'];
                     }
 
-                    // Perbarui data akun Admin Universitas.
                     DB::beginTransaction();
 
                     $user = User::role('Admin Universitas')->findOrFail($data['id']);
-                    $user->name  = isset($data['name']) ? $data['name'] : $user->name;
-                    $user->email = isset($data['email']) ? $data['email'] : $user->email;
+                    $user->update([
+                        'name'     => $data['name']  ?? $user->name,
+                        'email'    => $data['email'] ?? $user->email,
+                        'password' => isset($data['password']) ? bcrypt($data['password']) : $user->password,
+                    ]);
 
-                    // Hanya perbarui password jika disediakan.
-                    if (isset($data['password']) && !empty($data['password'])) {
-                        $user->password = Hash::make($data['password']);
-                    }
-
-                    $user->save();
                     DB::commit();
 
                     return [
@@ -184,26 +182,26 @@ class AdminUniversitasService
                     break;
 
                 case 'delete':
-                    // Hapus akun Admin Universitas berdasarkan id.
                     if (!isset($data['id'])) {
-                        return ['message' => 'ID akun tidak ditemukan untuk delete.'];
+                        return ['message' => 'ID akun tidak ditemukan untuk dihapus.'];
                     }
 
                     DB::beginTransaction();
 
                     $user = User::role('Admin Universitas')->findOrFail($data['id']);
                     $user->delete();
+
                     DB::commit();
+
                     return [
                         'message' => 'Akun Admin Universitas berhasil dihapus.'
                     ];
                     break;
 
-
                 default:
                     throw new Exception('Aksi tidak valid atau belum disediakan.');
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
             throw new Exception('Terjadi kesalahan: ' . $e->getMessage());
         }

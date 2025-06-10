@@ -3,87 +3,91 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class AkunAdminUniversitasTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
-    /**
-     * Test mengambil seluruh akun Admin Universitas.
-     */
+    protected $user;
+    protected $role;
+    protected $permission;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Buat role "Admin Universitas" dan permission
+        $this->role = Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
+        $this->permission = Permission::firstOrCreate(['name' => 'Mengelola akun admin universitas', 'guard_name' => 'web']);
+
+        // Buat user untuk request dan assign role serta berikan permission
+        $this->user = User::factory()->create();
+        $this->user->assignRole($this->role);
+        $this->role->givePermissionTo($this->permission);
+    }
+
     public function test_view_all_akun_admin_universitas(): void
     {
-        // Buat role "Admin Universitas"
-        Role::firstOrCreate(['name' => 'Admin Universitas']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin universitas']);
-
-        // Buat user dengan permission dan role
-        $user = User::factory()->create();
-        $user->assignRole('Admin Universitas');
-        $role = Role::where('name', 'Admin Universitas')->first();
-        $role->givePermissionTo('Mengelola akun admin universitas');
-
-        // Buat beberapa akun Admin Universitas untuk kebutuhan testing.
+        // Buat beberapa akun Admin Universitas di database.
         $admin1 = User::factory()->create([
             'name'  => 'Admin Universitas 1',
             'email' => 'admin1@example.com'
         ]);
-        $admin1->assignRole('Admin Universitas');
+        $admin1->assignRole($this->role);
 
         $admin2 = User::factory()->create([
             'name'  => 'Admin Universitas 2',
             'email' => 'admin2@example.com'
         ]);
-        $admin2->assignRole('Admin Universitas');
+        $admin2->assignRole($this->role);
 
-        // Lakukan GET request ke endpoint view.
-        $response = $this->actingAs($user)
-            ->getJson('/api/kelola-akun-admin-universitas?action=view');
+        // Siapkan payload request
+        $payload = [
+            'action' => 'view',
+        ];
 
-        // Pastikan response memiliki status 200 dan pesan yang sesuai.
+        // Kirim request POST dengan menggunakan user yang sudah disiapkan di setUp()
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-universitas', $payload);
+
+        // Pastikan respon memiliki status 200 dan pesan yang sesuai
         $response->assertStatus(200)
             ->assertJson([
                 'message' => 'Semua data akun Admin Universitas berhasil diambil.'
             ]);
+
+        // Opsional: pastikan data yang dikembalikan berupa array dan setidaknya terdapat 2 data
+        $data = $response->json('data');
+        $this->assertIsArray($data);
+        $this->assertGreaterThanOrEqual(2, count($data));
     }
 
-    /**
-     * Test mengambil detail satu akun Admin Universitas berdasarkan id.
-     */
     public function test_view_detail_akun_admin_universitas_berdasarkan_id(): void
     {
-        // Buat role "Admin Universitas"
-        Role::firstOrCreate(['name' => 'Admin Universitas']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin universitas']);
-
-        // Buat user dengan permission dan role
-        $user = User::factory()->create();
-        $user->assignRole('Admin Universitas');
-        $role = Role::where('name', 'Admin Universitas')->first();
-        $role->givePermissionTo('Mengelola akun admin universitas');
-
-        // Buat akun Admin Universitas yang akan diambil datanya.
+        // Buat akun admin yang akan diambil detailnya
         $admin = User::factory()->create([
             'name'  => 'Admin Universitas Detail',
-            'email' => 'detail@example.com'
+            'email' => 'detail@example.com',
         ]);
-        $admin->assignRole('Admin Universitas');
+        $admin->assignRole($this->role);
 
-        // Lakukan GET request dengan parameter "id" untuk mengambil detail akun.
-        $response = $this->actingAs($user)
-            ->getJson('/api/kelola-akun-admin-universitas?action=view&id=' . $admin->id);
+        $payload = [
+            'action' => 'view',
+            'id'     => $admin->id,
+        ];
 
-        // Pastikan response memiliki status 200 dan pesan sesuai.
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-universitas', $payload);
+
         $response->assertStatus(200)
             ->assertJson([
                 'message' => 'Data akun Admin Universitas berhasil diambil.',
             ]);
 
-        // Pastikan data yang dikembalikan benar (cukup cek email dan id saja).
         $data = $response->json('data');
         $this->assertEquals($admin->id, $data['id']);
         $this->assertEquals($admin->email, $data['email']);
@@ -91,31 +95,21 @@ class AkunAdminUniversitasTest extends TestCase
 
     public function test_store_akun_admin_universitas_berhasil(): void
     {
-        // Buat role "Admin Universitas"
-        Role::firstOrCreate(['name' => 'Admin Universitas']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin universitas']);
+        $payload = [
+            'action'   => 'store',
+            'name'     => 'Admin Universitas 1',
+            'email'    => 'admin1@example.com',
+            'password' => 'password123',
+        ];
 
-        // Buat user dengan permission dan role
-        $user = User::factory()->create();
-        $user->assignRole('Admin Universitas');
-        $role = Role::where('name', 'Admin Universitas')->first();
-        $role->givePermissionTo('Mengelola akun admin universitas');
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-universitas', $payload);
 
-        // Kirim request sebagai user yang sudah memiliki role dan permission
-        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-universitas', [
-            'action' => 'store',
-            'name' => 'Admin Universitas 1',
-            'email' => 'admin1@example.com',
-            'password' => 'password123'
-        ]);
-
-        // Pastikan response berhasil dan statusnya 201 Created
         $response->assertStatus(201)
             ->assertJson([
-                'message' => 'Akun Admin Universitas berhasil dibuat.'
+                'message' => 'Akun Admin Universitas berhasil dibuat.',
             ]);
 
-        // Pastikan data benar-benar masuk ke database
         $this->assertDatabaseHas('users', [
             'email' => 'admin1@example.com'
         ]);
@@ -123,69 +117,45 @@ class AkunAdminUniversitasTest extends TestCase
 
     public function test_store_akun_admin_universitas_validasi_gagal(): void
     {
-        // Buat role "Admin Universitas"
-        Role::firstOrCreate(['name' => 'Admin Universitas']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin universitas']);
+        $payload = [
+            'action'   => 'store',
+            'name'     => '', // Nama kosong harusnya gagal
+            'email'    => 'invalid-email', // Format email salah
+            'password' => 'short', // Password terlalu pendek
+        ];
 
-        // Buat user dengan permission dan role
-        $user = User::factory()->create();
-        $user->assignRole('Admin Universitas');
-        $role = Role::where('name', 'Admin Universitas')->first();
-        $role->givePermissionTo('Mengelola akun admin universitas');
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-universitas', $payload);
 
-        // Kirim request dengan data yang tidak valid
-        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-universitas', [
-            'action' => 'store',
-            'name' => '', // Kosong, harusnya invalid
-            'email' => 'invalid-email', // Format salah
-            'password' => 'short' // Password kurang dari 8 karakter
-        ]);
-
-        // Pastikan response error dengan status 422 (Unprocessable Entity)
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['name', 'email', 'password']);
     }
 
-    /**
-     * Test update akun admin universitas berhasil.
-     */
     public function test_update_akun_admin_universitas_berhasil(): void
     {
-        // Buat role dan permission menggunakan firstOrCreate agar tidak terjadi duplicate
-        $role = Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin universitas', 'guard_name' => 'web']);
-
-        // Buat user yang akan melakukan update (user pelaku request)
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola akun admin universitas');
-
-        // Buat akun admin yang akan diupdate
+        // Buat akun admin awal
         $admin = User::factory()->create([
             'name'  => 'Admin Old Name',
             'email' => 'adminold@example.com',
         ]);
-        $admin->assignRole($role);
+        $admin->assignRole($this->role);
 
-        // Data update yang valid
-        $updateData = [
-            'action'                => 'update',
-            'id'                    => $admin->id,
-            'name'                  => 'Admin New Name',
-            'email'                 => 'adminnew@example.com',
-            'password'              => 'newpassword123'
+        $updatePayload = [
+            'action'   => 'update',
+            'id'       => $admin->id,
+            'name'     => 'Admin New Name',
+            'email'    => 'adminnew@example.com',
+            'password' => 'newpassword123',
         ];
 
-        // Lakukan request update dengan method POST sesuai dengan route Anda
-        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-universitas', $updateData);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-universitas', $updatePayload);
 
-        // Pastikan response berhasil dengan status 200 dan pesan yang sesuai
         $response->assertStatus(200)
             ->assertJson([
-                'message' => 'Akun Admin Universitas berhasil diperbarui.'
+                'message' => 'Akun Admin Universitas berhasil diperbarui.',
             ]);
 
-        // Pastikan data pada database sudah terupdate
         $this->assertDatabaseHas('users', [
             'id'    => $admin->id,
             'name'  => 'Admin New Name',
@@ -193,74 +163,52 @@ class AkunAdminUniversitasTest extends TestCase
         ]);
     }
 
-    /**
-     * Test update akun admin universitas gagal karena validasi.
-     */
     public function test_update_akun_admin_universitas_validasi_gagal(): void
     {
-        // Buat role dan permission
-        $role = Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin universitas', 'guard_name' => 'web']);
-
-        // Buat user yang akan melakukan request update
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola akun admin universitas');
-
-        // Buat akun admin yang akan diupdate
+        // Buat akun admin untuk diuji validasinya
         $admin = User::factory()->create([
             'name'  => 'Admin Existing',
             'email' => 'existingadmin@example.com',
         ]);
-        $admin->assignRole($role);
+        $admin->assignRole($this->role);
 
-        // Kirim data update yang tidak valid: nama kosong, email format salah, password terlalu pendek
-        $updateData = [
-            'action' => 'update',
-            'id'     => $admin->id,
-            'name'   => '',
-            'email'  => 'not-an-email',
-            'password' => 'short',
+        $invalidPayload = [
+            'action'   => 'update',
+            'id'       => $admin->id,
+            'name'     => '', // Nama kosong
+            'email'    => 'not-an-email', // Format email salah
+            'password' => 'short', // Password terlalu pendek
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-universitas', $updateData);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-universitas', $invalidPayload);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['name', 'email', 'password']);
     }
 
-
     public function test_delete_akun_admin_universitas_berhasil(): void
     {
-        // Buat role dan permission (gunakan firstOrCreate untuk menghindari error duplicate)
-        $role = Role::firstOrCreate(['name' => 'Admin Universitas']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin universitas']);
-
-        // Buat user yang akan melakukan request
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola akun admin universitas');
-
         // Buat akun admin yang akan dihapus
         $admin = User::factory()->create([
-            'name' => 'Test Admin',
-            'email' => 'testadmin@example.com'
+            'name'  => 'Test Admin',
+            'email' => 'testadmin@example.com',
         ]);
-        $admin->assignRole($role);
+        $admin->assignRole($this->role);
 
-        // Jalankan request delete dengan method POST dan parameter action 'delete'
-        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-universitas', [
+        $payload = [
             'action' => 'delete',
             'id'     => $admin->id,
-        ]);
+        ];
 
-        // Pastikan response status 200 dan pesan sesuai
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-universitas', $payload);
+
         $response->assertStatus(200)
             ->assertJson([
-                'message' => 'Akun Admin Universitas berhasil dihapus.'
+                'message' => 'Akun Admin Universitas berhasil dihapus.',
             ]);
 
-        // Pastikan data user yang dihapus tidak ada di database
         $this->assertDatabaseMissing('users', [
             'id'    => $admin->id,
             'email' => $admin->email,
