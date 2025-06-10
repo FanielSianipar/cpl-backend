@@ -22,8 +22,7 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'Mengelola data CPMK']);
         Permission::create(['name' => 'Melakukan pemetaan CPL']);
         Permission::create(['name' => 'Melakukan pemetaan CPMK']);
-        Permission::create(['name' => 'Memasukkan bobot CPL']);
-        Permission::create(['name' => 'Memasukkan bobot CPMK']);
+        Permission::create(['name' => 'Dapat mengelola assessment']);
         Permission::create(['name' => 'Mengelola data nilai mahasiswa']);
         Permission::create(['name' => 'Melihat hasil perhitungan']);
 
@@ -52,6 +51,7 @@ class PermissionSeeder extends Seeder
                 'Mengelola data CPMK',
                 'Melakukan pemetaan CPL',
                 'Melakukan pemetaan CPMK',
+                'Dapat mengelola assessment',
                 'Melihat hasil perhitungan',
             ]);
         }

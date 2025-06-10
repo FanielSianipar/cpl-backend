@@ -13,12 +13,19 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            // Menambahkan kolom prodi_id, nullable karena user seperti Admin Universitas bisa tidak memiliki prodi.
+            $table->unsignedBigInteger('prodi_id')->nullable();
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+
+            // Asumsi tabel prodi sudah ada dengan key id.
+            $table->foreign('prodi_id')
+                ->references('prodi_id')->on('prodi')
+                ->onDelete('set null'); // Jika prodi dihapus, set nilai prodi_id ke null.
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

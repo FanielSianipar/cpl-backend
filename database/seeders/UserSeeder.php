@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Prodi;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Arr;
 use Spatie\Permission\Models\Role;
@@ -15,18 +15,44 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Membuat data user dummy
-        $users = User::factory()->count(10)->create();
+        $adminUniversitasRole = Role::firstOrCreate([
+            'name' => 'Admin Universitas',
+            'guard_name' => 'web'
+        ]);
 
-        // Mengambil semua nama role yang telah didaftarkan via RoleSeeder
-        $roleNames = Role::pluck('name')->toArray();
+        // Role untuk user non-admin: Admin Prodi, Kaprodi, dan Dosen.
+        $adminProdiRole = Role::firstOrCreate([
+            'name' => 'Admin Prodi',
+            'guard_name' => 'web'
+        ]);
+        $kaprodiRole = Role::firstOrCreate([
+            'name' => 'Kaprodi',
+            'guard_name' => 'web'
+        ]);
+        $dosenRole = Role::firstOrCreate([
+            'name' => 'Dosen',
+            'guard_name' => 'web'
+        ]);
 
-        // Assign role secara acak ke masing-masing user
-        foreach ($users as $user) {
-            if (!empty($roleNames)) {
-                // Menggunakan helper Arr untuk memilih role secara acak
-                $user->assignRole(Arr::random($roleNames));
-            }
+        $nonAdminRoles = [$adminProdiRole, $kaprodiRole, $dosenRole];
+
+        // Buat 3 user dengan role Admin Universitas (prodi_id = null)
+        $adminUsers = User::factory()->count(3)->create([
+            'prodi_id' => null, // User Admin Universitas tidak terikat ke prodi
+        ]);
+
+        foreach ($adminUsers as $user) {
+            $user->assignRole($adminUniversitasRole);
         }
+
+        $prodiIds = Prodi::pluck('prodi_id')->toArray();
+
+        // Buat 17 user dan tetapkan prodi_id secara round-robin dari array $prodiIds
+        User::factory()->count(17)->make()->each(function ($user, $index) use ($prodiIds, $nonAdminRoles) {
+            $user->prodi_id = $prodiIds[$index % count($prodiIds)];
+            $user->save();
+            // Memberikan salah satu role non-admin secara acak
+            $user->assignRole(Arr::random($nonAdminRoles));
+        });
     }
 }
