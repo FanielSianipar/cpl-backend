@@ -73,34 +73,19 @@ class AdminUniversitasController extends Controller
      * @param StoreAkunRequest $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function viewAkunAdminProdi(StoreAkunRequest $request)
+    public function kelolaAkunAdminProdi(StoreAkunRequest $request)
     {
-        try {
-            $data = array_merge($request->all(), ['action' => 'view']);
-            $result = $this->adminUniversitasService->kelolaAkunAdminProdi($data);
+        // Dapatkan data tervalidasi, lalu tambahkan key 'action' (misalnya dikirim via query atau body)
+        $data = $request->validated();
+        // Pastikan key 'action' diatur melalui request (misalnya store, update, view, delete)
+        $data['action'] = $request->input('action');
 
-            return response()->json($result, 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
+        $result = $this->adminUniversitasService->kelolaAkunAdminProdi($data);
 
-    public function storeAkunAdminProdi(StoreAkunRequest $request)
-    {
-        try {
-            $data = $request->validated();
-            $result = $this->adminUniversitasService->kelolaAkunAdminProdi($data);
+        // Status code ditetapkan berdasarkan jenis aksi, 201 untuk store, 200 untuk view, update, delete
+        $statusCode = in_array($data['action'], ['store']) ? 201 : 200;
 
-            // Sesuaikan status response: 201 untuk store, 200 untuk view, update, delete
-            $status = in_array($data['action'], ['store']) ? 201 : 200;
-            return response()->json($result, $status);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json($result, $statusCode);
     }
 
     /**

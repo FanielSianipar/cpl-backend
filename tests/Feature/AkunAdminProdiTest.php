@@ -2,271 +2,273 @@
 
 namespace Tests\Feature;
 
+use App\Models\Prodi;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class AkunAdminProdiTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
+
+    protected $user;
+    protected $adminUniversitasRole;
+    protected $adminProdiRole;
+    protected $permission;
+    protected $prodi;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Buat role "Admin Universitas" untuk user yang melakukan request
+        $this->adminUniversitasRole = Role::firstOrCreate([
+            'name'       => 'Admin Universitas',
+            'guard_name' => 'web'
+        ]);
+
+        // Buat role "Admin Prodi" untuk akun yang dikelola
+        $this->adminProdiRole = Role::firstOrCreate([
+            'name'       => 'Admin Prodi',
+            'guard_name' => 'web'
+        ]);
+
+        // Buat permission untuk mengelola akun Admin Prodi
+        $this->permission = Permission::firstOrCreate([
+            'name'       => 'Mengelola akun admin prodi',
+            'guard_name' => 'web'
+        ]);
+
+        // Buat user acting (Admin Universitas) dan assign role serta permission
+        $this->user = User::factory()->create();
+        $this->user->assignRole($this->adminUniversitasRole);
+        $this->adminUniversitasRole->givePermissionTo($this->permission);
+
+        // Buat satu record Prodi untuk keperluan testing
+        $this->prodi = Prodi::factory()->create(['nama_prodi' => 'Teknik Informatika']);
+    }
 
     /**
      * Test mengambil seluruh akun Admin Prodi.
      */
     public function test_view_all_akun_admin_prodi(): void
     {
-        // Buat role "Admin Prodi"
-        Role::firstOrCreate(['name' => 'Admin Prodi']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin prodi']);
-
-        // Buat user dengan permission dan role
-        $user = User::factory()->create();
-        $user->assignRole('Admin Universitas');
-        $role = Role::where('name', 'Admin Universitas')->first();
-        $role->givePermissionTo('Mengelola akun admin prodi');
-
-        // Buat beberapa akun Admin Prodi untuk kebutuhan testing.
+        // Buat beberapa akun Admin Prodi
         $admin1 = User::factory()->create([
-            'name'  => 'Admin Prodi 1',
-            'email' => 'admin1@example.com'
+            'name'     => 'Admin Prodi 1',
+            'email'    => 'adminprodi1@example.com',
+            'prodi_id' => $this->prodi->prodi_id,
         ]);
-        $admin1->assignRole('Admin Prodi');
+        $admin1->assignRole($this->adminProdiRole);
 
         $admin2 = User::factory()->create([
-            'name'  => 'Admin Prodi 2',
-            'email' => 'admin2@example.com'
+            'name'     => 'Admin Prodi 2',
+            'email'    => 'adminprodi2@example.com',
+            'prodi_id' => $this->prodi->prodi_id,
         ]);
-        $admin2->assignRole('Admin Prodi');
+        $admin2->assignRole($this->adminProdiRole);
 
-        // Lakukan GET request ke endpoint view.
-        $response = $this->actingAs($user)
-            ->getJson('/api/kelola-akun-admin-prodi?action=view');
+        $payload = [
+            'action' => 'view',
+        ];
 
-        // Pastikan response memiliki status 200 dan pesan yang sesuai.
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-prodi', $payload);
+
         $response->assertStatus(200)
             ->assertJson([
                 'message' => 'Semua data akun Admin Prodi berhasil diambil.'
             ]);
+
+        $data = $response->json('data');
+        $this->assertIsArray($data);
+        $this->assertGreaterThanOrEqual(2, count($data));
+
+        // Pastikan setiap data memiliki field prodi_id
+        foreach ($data as $userData) {
+            $this->assertArrayHasKey('prodi_id', $userData);
+        }
     }
 
     /**
-     * Test mengambil detail satu akun Admin Prodi berdasarkan id.
+     * Test mengambil detail satu akun Admin Prodi berdasarkan ID.
      */
     public function test_view_detail_akun_admin_prodi_berdasarkan_id(): void
     {
-        // Buat role "Admin Prodi"
-        Role::firstOrCreate(['name' => 'Admin Prodi']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin prodi']);
-
-        // Buat user dengan permission dan role
-        $user = User::factory()->create();
-        $user->assignRole('Admin Universitas');
-        $role = Role::where('name', 'Admin Universitas')->first();
-        $role->givePermissionTo('Mengelola akun admin prodi');
-
-        // Buat akun Admin Prodi yang akan diambil datanya.
         $admin = User::factory()->create([
-            'name'  => 'Admin Prodi Detail',
-            'email' => 'detail@example.com'
+            'name'     => 'Admin Prodi Detail',
+            'email'    => 'detailadminprodi@example.com',
+            'prodi_id' => $this->prodi->prodi_id,
         ]);
-        $admin->assignRole('Admin Prodi');
+        $admin->assignRole($this->adminProdiRole);
 
-        // Lakukan GET request dengan parameter "id" untuk mengambil detail akun.
-        $response = $this->actingAs($user)
-            ->getJson('/api/kelola-akun-admin-prodi?action=view&id=' . $admin->id);
+        $payload = [
+            'action' => 'view',
+            'id'     => $admin->id,
+        ];
 
-        // Pastikan response memiliki status 200 dan pesan sesuai.
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-prodi', $payload);
+
         $response->assertStatus(200)
             ->assertJson([
                 'message' => 'Data akun Admin Prodi berhasil diambil.',
             ]);
 
-        // Pastikan data yang dikembalikan benar (cukup cek email dan id saja).
         $data = $response->json('data');
         $this->assertEquals($admin->id, $data['id']);
         $this->assertEquals($admin->email, $data['email']);
+        $this->assertEquals($this->prodi->prodi_id, $data['prodi_id']);
     }
 
+    /**
+     * Test pembuatan akun Admin Prodi berhasil.
+     */
     public function test_store_akun_admin_prodi_berhasil(): void
     {
-        // Buat role "Admin Prodi"
-        Role::firstOrCreate(['name' => 'Admin Prodi']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin prodi']);
+        $payload = [
+            'action'   => 'store',
+            'name'     => 'Admin Prodi Baru',
+            'email'    => 'adminprodi_baru@example.com',
+            'password' => 'password123',
+            'prodi_id' => $this->prodi->prodi_id,
+        ];
 
-        // Buat user dengan permission dan role
-        $user = User::factory()->create();
-        $user->assignRole('Admin Universitas');
-        $role = Role::where('name', 'Admin Universitas')->first();
-        $role->givePermissionTo('Mengelola akun admin prodi');
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-prodi', $payload);
 
-        // Kirim request sebagai user yang sudah memiliki role dan permission
-        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-prodi', [
-            'action' => 'store',
-            'name' => 'Admin Prodi 1',
-            'email' => 'admin1@example.com',
-            'password' => 'password123'
-        ]);
-
-        // Pastikan response berhasil dan statusnya 201 Created
         $response->assertStatus(201)
             ->assertJson([
                 'message' => 'Akun Admin Prodi berhasil dibuat.'
             ]);
 
-        // Pastikan data benar-benar masuk ke database
         $this->assertDatabaseHas('users', [
-            'email' => 'admin1@example.com'
-        ]);
-    }
-
-    public function test_store_akun_admin_prodi_validasi_gagal(): void
-    {
-        // Buat role "Admin Prodi"
-        Role::firstOrCreate(['name' => 'Admin Prodi']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin prodi']);
-
-        // Buat user dengan permission dan role
-        $user = User::factory()->create();
-        $user->assignRole('Admin Universitas');
-        $role = Role::where('name', 'Admin Universitas')->first();
-        $role->givePermissionTo('Mengelola akun admin prodi');
-
-        // Kirim request dengan data yang tidak valid
-        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-prodi', [
-            'action' => 'store',
-            'name' => '', // Kosong, harusnya invalid
-            'email' => 'invalid-email', // Format salah
-            'password' => 'short' // Password kurang dari 8 karakter
+            'email'    => 'adminprodi_baru@example.com',
+            'prodi_id' => $this->prodi->prodi_id,
         ]);
 
-        // Pastikan response error dengan status 422 (Unprocessable Entity)
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['name', 'email', 'password']);
+        $createdUser = User::where('email', 'adminprodi_baru@example.com')->first();
+        $this->assertTrue($createdUser->hasRole('Admin Prodi'));
     }
 
     /**
-     * Test update akun admin prodi berhasil.
+     * Test validasi gagal saat pembuatan akun Admin Prodi.
+     */
+    public function test_store_akun_admin_prodi_validasi_gagal(): void
+    {
+        $payload = [
+            'action'   => 'store',
+            'name'     => '',              // Nama kosong -> invalid
+            'email'    => 'not-an-email',  // Format email salah
+            'password' => 'short',         // Password terlalu pendek
+            'prodi_id' => '',              // Prodi_id kosong -> invalid
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-prodi', $payload);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['name', 'email', 'password', 'prodi_id']);
+    }
+
+    /**
+     * Test update akun Admin Prodi berhasil.
      */
     public function test_update_akun_admin_prodi_berhasil(): void
     {
-        // Buat role dan permission menggunakan firstOrCreate agar tidak terjadi duplicate
-        Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin prodi', 'guard_name' => 'web']);
-
-        // Buat user dengan permission dan role
-        $user = User::factory()->create();
-        $user->assignRole('Admin Universitas');
-        $role = Role::where('name', 'Admin Universitas')->first();
-        $role->givePermissionTo('Mengelola akun admin prodi');
-
-        // Buat akun admin yang akan diupdate
-        Role::firstOrCreate(['name' => 'Admin Prodi', 'guard_name' => 'web']);
+        // Buat akun Admin Prodi awal
         $admin = User::factory()->create([
-            'name'  => 'Admin Old Name',
-            'email' => 'adminold@example.com',
+            'name'     => 'Admin Prodi Lama',
+            'email'    => 'adminprodi_lama@example.com',
+            'prodi_id' => $this->prodi->prodi_id,
         ]);
-        $admin->assignRole('Admin Prodi');
+        $admin->assignRole($this->adminProdiRole);
 
-        // Data update yang valid
-        $updateData = [
-            'action'                => 'update',
-            'id'                    => $admin->id,
-            'name'                  => 'Admin New Name',
-            'email'                 => 'adminnew@example.com',
-            'password'              => 'newpassword123'
+        // Jika ingin update ke prodi yang berbeda, buat terlebih dahulu record prodi baru
+        $newProdi = Prodi::factory()->create([
+            'nama_prodi' => 'Sistem Informasi'
+        ]);
+
+        $updatePayload = [
+            'action'   => 'update',
+            'id'       => $admin->id,
+            'name'     => 'Admin Prodi Baru',
+            'email'    => 'adminprodi_baru_updated@example.com',
+            'password' => 'newpassword123',
+            'prodi_id' => $newProdi->prodi_id,
         ];
 
-        // Lakukan request update dengan method POST sesuai dengan route Anda
-        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-prodi', $updateData);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-prodi', $updatePayload);
 
-        // Pastikan response berhasil dengan status 200 dan pesan yang sesuai
         $response->assertStatus(200)
             ->assertJson([
-                'message' => 'Akun Admin Prodi berhasil diperbarui.'
+                'message' => 'Akun Admin Prodi berhasil diperbarui.',
             ]);
 
-        // Pastikan data pada database sudah terupdate
         $this->assertDatabaseHas('users', [
-            'id'    => $admin->id,
-            'name'  => 'Admin New Name',
-            'email' => 'adminnew@example.com',
+            'id'       => $admin->id,
+            'name'     => 'Admin Prodi Baru',
+            'email'    => 'adminprodi_baru_updated@example.com',
+            'prodi_id' => $newProdi->prodi_id,
         ]);
     }
 
     /**
-     * Test update akun admin prodi gagal karena validasi.
+     * Test validasi gagal saat update akun Admin Prodi.
      */
     public function test_update_akun_admin_prodi_validasi_gagal(): void
     {
-        // Buat role dan permission menggunakan firstOrCreate agar tidak terjadi duplicate
-        Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin prodi', 'guard_name' => 'web']);
-
-        // Buat user dengan permission dan role
-        $user = User::factory()->create();
-        $user->assignRole('Admin Universitas');
-        $role = Role::where('name', 'Admin Universitas')->first();
-        $role->givePermissionTo('Mengelola akun admin prodi');
-
-        // Buat akun admin yang akan diupdate
-        Role::firstOrCreate(['name' => 'Admin Prodi', 'guard_name' => 'web']);
         $admin = User::factory()->create([
-            'name'  => 'Admin Existing',
-            'email' => 'existingadmin@example.com',
+            'name'     => 'Admin Prodi Existing',
+            'email'    => 'existing_adminprodi@example.com',
+            'prodi_id' => $this->prodi->prodi_id,
         ]);
-        $admin->assignRole('Admin Prodi');
+        $admin->assignRole($this->adminProdiRole);
 
-        // Kirim data update yang tidak valid: nama kosong, email format salah, password terlalu pendek
-        $updateData = [
-            'action' => 'update',
-            'id'     => $admin->id,
-            'name'   => '',
-            'email'  => 'not-an-email',
-            'password' => 'short',
+        $invalidPayload = [
+            'action'   => 'update',
+            'id'       => $admin->id,
+            'name'     => '',             // Nama kosong -> invalid
+            'email'    => 'not-an-email', // Format email salah
+            'password' => 'short',        // Password terlalu pendek
+            'prodi_id' => '',             // Prodi_id tidak valid
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-prodi', $updateData);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-prodi', $invalidPayload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['name', 'email', 'password']);
+            ->assertJsonValidationErrors(['name', 'email', 'password', 'prodi_id']);
     }
 
-
+    /**
+     * Test penghapusan akun Admin Prodi berhasil.
+     */
     public function test_delete_akun_admin_prodi_berhasil(): void
     {
-        // Buat role dan permission menggunakan firstOrCreate agar tidak terjadi duplicate
-        Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola akun admin prodi', 'guard_name' => 'web']);
-
-        // Buat user dengan permission dan role
-        $user = User::factory()->create();
-        $user->assignRole('Admin Universitas');
-        $role = Role::where('name', 'Admin Universitas')->first();
-        $role->givePermissionTo('Mengelola akun admin prodi');
-
-        // Buat akun admin yang akan dihapus
-        Role::firstOrCreate(['name' => 'Admin Prodi', 'guard_name' => 'web']);
         $admin = User::factory()->create([
-            'name' => 'Test Admin',
-            'email' => 'testadmin@example.com'
+            'name'     => 'Admin Prodi Delete',
+            'email'    => 'delete_adminprodi@example.com',
+            'prodi_id' => $this->prodi->prodi_id,
         ]);
-        $admin->assignRole('Admin Prodi');
+        $admin->assignRole($this->adminProdiRole);
 
-        // Jalankan request delete dengan method POST dan parameter action 'delete'
-        $response = $this->actingAs($user)->postJson('/api/kelola-akun-admin-prodi', [
+        $payload = [
             'action' => 'delete',
             'id'     => $admin->id,
-        ]);
+        ];
 
-        // Pastikan response status 200 dan pesan sesuai
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-akun-admin-prodi', $payload);
+
         $response->assertStatus(200)
             ->assertJson([
-                'message' => 'Akun Admin Prodi berhasil dihapus.'
+                'message' => 'Akun Admin Prodi berhasil dihapus.',
             ]);
 
-        // Pastikan data user yang dihapus tidak ada di database
         $this->assertDatabaseMissing('users', [
             'id'    => $admin->id,
             'email' => $admin->email,

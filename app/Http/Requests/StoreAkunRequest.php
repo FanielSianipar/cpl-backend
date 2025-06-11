@@ -42,11 +42,10 @@ class StoreAkunRequest extends FormRequest
             'action' => 'required|string|in:view,store,update,delete',
         ];
 
-        // Jika aksi view, Anda bisa menambahkan validasi sesuai kebutuhan
+        // Jika aksi view, validasi jika ingin ambil record berdasarkan id
         if ($this->input('action') === 'view') {
-            // Misalnya, jika ingin update single record melalui id
             $rules = array_merge($rules, [
-                'id' => ['sometimes', 'exists:users,id']
+                'id' => ['sometimes', 'exists:users,id'],
             ]);
         }
 
@@ -56,6 +55,7 @@ class StoreAkunRequest extends FormRequest
                 'name'     => ['required', 'string', 'min:1', 'max:255'],
                 'email'    => ['required', 'email', 'unique:users,email'],
                 'password' => ['required', 'string', 'min:8'],
+                'prodi_id' => ['required', 'integer', 'exists:prodi,prodi_id'],
             ]);
         }
 
@@ -70,6 +70,7 @@ class StoreAkunRequest extends FormRequest
                     Rule::unique('users', 'email')->ignore($this->id),
                 ],
                 'password' => ['nullable', 'string', 'min:8'],
+                'prodi_id' => ['required', 'integer', 'exists:prodi,prodi_id'],
             ]);
         }
 
@@ -86,15 +87,18 @@ class StoreAkunRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'id.required' => 'ID akun wajib dikirim untuk update.',
-            'id.exists'   => 'Akun dengan ID tersebut tidak ditemukan.',
-            'name.required' => 'Nama wajib diisi.',
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'email.unique' => 'Email sudah digunakan, silakan pilih email lain.',
-            'password.required' => 'Password wajib diisi.',
-            'password.min' => 'Password minimal harus 8 karakter.',
-            'password.confirmed' => 'Konfirmasi password tidak sesuai.'
+            'id.required'         => 'ID akun wajib dikirim untuk update.',
+            'id.exists'           => 'Akun dengan ID tersebut tidak ditemukan.',
+            'name.required'       => 'Nama wajib diisi.',
+            'email.required'      => 'Email wajib diisi.',
+            'email.email'         => 'Format email tidak valid.',
+            'email.unique'        => 'Email sudah digunakan, silakan pilih email lain.',
+            'password.required'   => 'Password wajib diisi.',
+            'password.min'        => 'Password minimal harus 8 karakter.',
+            'password.confirmed'  => 'Konfirmasi password tidak sesuai.',
+            'prodi_id.required'   => 'Prodi wajib diisi.',
+            'prodi_id.integer'    => 'Prodi harus berupa angka.',
+            'prodi_id.exists'     => 'Prodi tidak ditemukan.',
         ];
     }
 }

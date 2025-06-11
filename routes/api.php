@@ -36,10 +36,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
     // Kelola akun admin prodi
     Route::middleware(['role:Admin Universitas', 'permission:Mengelola akun admin prodi'])->group(function () {
-        Route::get('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'viewAkunAdminProdi']);
-        Route::post('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'storeAkunAdminProdi']);
-        Route::put('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'storeAkunAdminProdi']);
-        Route::delete('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'storeAkunAdminProdi']);
+        Route::get('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'kelolaAkunAdminProdi']);
+        Route::post('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'kelolaAkunAdminProdi']);
+        Route::put('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'kelolaAkunAdminProdi']);
+        Route::delete('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'kelolaAkunAdminProdi']);
     });
     // Lihat hasil perhitungan
     Route::middleware(['permission:view calculation results'])->group(function () {
