@@ -126,7 +126,6 @@ class AdminProdiService
         }
     }
 
-
     public function kelolaAkunDosen(array $data): array
     {
         $action = $data['action'] ?? null;
@@ -134,16 +133,21 @@ class AdminProdiService
         try {
             switch ($action) {
                 case 'view':
-                    // Jika terdapat parameter id, ambil data satu akun.
-                    // Jika tidak, ambil keseluruhan akun dengan role dosen.
                     if (isset($data['id'])) {
-                        $user = User::role('Dosen')->findOrFail($data['id']);
+                        // Ambil data satu akun Dosen berdasarkan ID
+                        $user = User::role('Dosen')
+                            ->with('prodi')
+                            ->findOrFail($data['id']);
                         return [
                             'data'    => $user,
                             'message' => 'Data akun Dosen berhasil diambil.'
                         ];
                     } else {
-                        $users = User::role('Dosen')->get();
+                        // Ambil semua akun Dosen
+                        $users = User::role('Dosen')
+                            ->with('prodi')
+                            ->select('id', 'name', 'email', 'prodi_id')
+                            ->get();
                         return [
                             'data'    => $users,
                             'message' => 'Semua data akun Dosen berhasil diambil.'
@@ -152,17 +156,21 @@ class AdminProdiService
                     break;
 
                 case 'store':
-                    // Tambah akun Dosen baru.
                     DB::beginTransaction();
-                    $user = User::create([
-                        'name'     => $data['name'],
-                        'email'    => $data['email'],
-                        'password' => bcrypt($data['password']),
-                    ]);
-                    DB::commit();
 
-                    // Assign role 'Dosen' menggunakan Spatie Permission.
+                    // Buat user baru dengan Eloquent ORM
+                    $user = User::create([
+                        'name'           => $data['name'],
+                        'email'          => $data['email'],
+                        'password'       => bcrypt($data['password']),
+                        'remember_token' => Str::random(10),
+                        'prodi_id'       => $data['prodi_id'], // Tambahkan prodi_id
+                    ]);
+
+                    // Assign role "Dosen"
                     $user->assignRole('Dosen');
+
+                    DB::commit();
 
                     return [
                         'data'    => $user,
@@ -175,19 +183,16 @@ class AdminProdiService
                         return ['message' => 'ID akun tidak ditemukan untuk update.'];
                     }
 
-                    // Perbarui data akun Dosen.
                     DB::beginTransaction();
-                    $user = User::findOrFail($data['id']);
-                    $user->update([
-                        'name'     => $data['name']     ?? $user->name,
-                        'email'    => $data['email']    ?? $user->email,
-                        'password' => isset($data['password']) ? bcrypt($data['password']) : $user->password,
-                    ]);
 
-                    // Hanya perbarui password jika disediakan.
-                    if (isset($data['password'])) {
-                        $user->password = bcrypt($data['password']);
-                    }
+                    // Ambil data akun Dosen yang akan diperbarui
+                    $user = User::role('Dosen')->findOrFail($data['id']);
+                    $user->update([
+                        'name'     => $data['name'] ?? $user->name,
+                        'email'    => $data['email'] ?? $user->email,
+                        'password' => isset($data['password']) ? bcrypt($data['password']) : $user->password,
+                        'prodi_id' => $data['prodi_id'] ?? $user->prodi_id, // Update jika diberikan
+                    ]);
 
                     DB::commit();
 
@@ -198,16 +203,18 @@ class AdminProdiService
                     break;
 
                 case 'delete':
-                    // Hapus akun Dosen berdasarkan id.
                     if (!isset($data['id'])) {
                         return ['message' => 'ID akun tidak ditemukan untuk dihapus.'];
                     }
 
                     DB::beginTransaction();
 
+                    // Hapus akun Dosen berdasarkan ID
                     $user = User::role('Dosen')->findOrFail($data['id']);
                     $user->delete();
+
                     DB::commit();
+
                     return [
                         'message' => 'Akun Dosen berhasil dihapus.'
                     ];

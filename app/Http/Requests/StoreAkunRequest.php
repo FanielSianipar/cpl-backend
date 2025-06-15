@@ -84,6 +84,7 @@ class StoreAkunRequest extends FormRequest
                 'password' => ['nullable', 'string', 'min:8'],
                 'prodi_id' => [
                     $isAdminUniversitas ? 'nullable' : 'required',
+                    'sometimes',
                     'integer',
                     'exists:prodi,prodi_id',
                 ],
