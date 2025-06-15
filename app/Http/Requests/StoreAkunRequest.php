@@ -14,10 +14,9 @@ class StoreAkunRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        // Jika field id tersedia (misalnya dikirim melalui JSON), pastikan sudah ter-merge.
         if ($this->has('id')) {
             $this->merge([
-                'id' => $this->id, // Bisa juga cast ke integer jika diperlukan: (int) $this->id
+                'id' => $this->id, // Bisa juga cast ke integer jika diperlukan: (int)$this->id
             ]);
         }
     }
@@ -33,33 +32,46 @@ class StoreAkunRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Catatan:
+     * - Untuk aksi *store* dan *update*, validasi prodi_id bersifat required kecuali request datang dari endpoint
+     *   Admin Universitas (misalnya URI-nya: api/kelola-akun-admin-universitas) yang levelnya di atas prodi.
+     *
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
-        // Validasi dasar yang harus ada untuk semua aksi
+        // Aturan dasar untuk semua aksi
         $rules = [
             'action' => 'required|string|in:view,store,update,delete',
         ];
 
-        // Jika aksi view, validasi jika ingin ambil record berdasarkan id
+        // Tentukan apakah request berasal dari endpoint Admin Universitas
+        // Misalnya, jika URI-nya mengandung "admin-universitas", maka kita anggap user yang dibuat akan menjadi Admin Universitas
+        $isAdminUniversitas = $this->is('api/kelola-akun-admin-universitas');
+
+        // Aksi view
         if ($this->input('action') === 'view') {
             $rules = array_merge($rules, [
                 'id' => ['sometimes', 'exists:users,id'],
             ]);
         }
 
-        // Jika aksi store, validasi field yang diperlukan untuk pembuatan akun baru
+        // Aksi store
         if ($this->input('action') === 'store') {
             $rules = array_merge($rules, [
                 'name'     => ['required', 'string', 'min:1', 'max:255'],
                 'email'    => ['required', 'email', 'unique:users,email'],
                 'password' => ['required', 'string', 'min:8'],
-                'prodi_id' => ['required', 'integer', 'exists:prodi,prodi_id'],
+                // Jika bukan Admin Universitas, prodi_id wajib diisi; untuk Admin Universitas, nullable.
+                'prodi_id' => [
+                    $isAdminUniversitas ? 'nullable' : 'required',
+                    'integer',
+                    'exists:prodi,prodi_id',
+                ],
             ]);
         }
 
-        // Jika aksi update, validasi termasuk field id dan field lainnya
+        // Aksi update
         if ($this->input('action') === 'update') {
             $rules = array_merge($rules, [
                 'id'       => ['required', 'exists:users,id'],
@@ -70,11 +82,15 @@ class StoreAkunRequest extends FormRequest
                     Rule::unique('users', 'email')->ignore($this->id),
                 ],
                 'password' => ['nullable', 'string', 'min:8'],
-                'prodi_id' => ['required', 'integer', 'exists:prodi,prodi_id'],
+                'prodi_id' => [
+                    $isAdminUniversitas ? 'nullable' : 'required',
+                    'integer',
+                    'exists:prodi,prodi_id',
+                ],
             ]);
         }
 
-        // Aturan untuk delete
+        // Aksi delete
         if ($this->input('action') === 'delete') {
             $rules = array_merge($rules, [
                 'id' => ['required', 'exists:users,id'],
@@ -96,7 +112,7 @@ class StoreAkunRequest extends FormRequest
             'password.required'   => 'Password wajib diisi.',
             'password.min'        => 'Password minimal harus 8 karakter.',
             'password.confirmed'  => 'Konfirmasi password tidak sesuai.',
-            'prodi_id.required'   => 'Prodi wajib diisi.',
+            'prodi_id.required'   => 'Prodi wajib diisi jika bukan Admin Universitas.',
             'prodi_id.integer'    => 'Prodi harus berupa angka.',
             'prodi_id.exists'     => 'Prodi tidak ditemukan.',
         ];

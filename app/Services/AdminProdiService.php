@@ -10,6 +10,7 @@ use App\Models\Prodi;
 use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AdminProdiService
 {
@@ -29,16 +30,21 @@ class AdminProdiService
         try {
             switch ($action) {
                 case 'view':
-                    // Jika terdapat parameter id, ambil data satu akun.
-                    // Jika tidak, ambil keseluruhan akun dengan role kaprodi.
                     if (isset($data['id'])) {
-                        $user = User::role('Kaprodi')->findOrFail($data['id']);
+                        // Ambil data satu akun Kaprodi berdasarkan ID
+                        $user = User::role('Kaprodi')
+                            ->with('prodi')
+                            ->findOrFail($data['id']);
                         return [
                             'data'    => $user,
                             'message' => 'Data akun Kaprodi berhasil diambil.'
                         ];
                     } else {
-                        $users = User::role('Kaprodi')->get();
+                        // Ambil semua akun Kaprodi
+                        $users = User::role('Kaprodi')
+                            ->with('prodi')
+                            ->select('id', 'name', 'email', 'prodi_id')
+                            ->get();
                         return [
                             'data'    => $users,
                             'message' => 'Semua data akun Kaprodi berhasil diambil.'
@@ -47,17 +53,21 @@ class AdminProdiService
                     break;
 
                 case 'store':
-                    // Tambah akun Kaprodi baru.
                     DB::beginTransaction();
-                    $user = User::create([
-                        'name'     => $data['name'],
-                        'email'    => $data['email'],
-                        'password' => bcrypt($data['password']),
-                    ]);
-                    DB::commit();
 
-                    // Assign role 'Kaprodi' menggunakan Spatie Permission.
+                    // Buat user baru dengan Eloquent ORM
+                    $user = User::create([
+                        'name'           => $data['name'],
+                        'email'          => $data['email'],
+                        'password'       => bcrypt($data['password']),
+                        'remember_token' => Str::random(10),
+                        'prodi_id'       => $data['prodi_id'], // Tambahkan prodi_id
+                    ]);
+
+                    // Assign role "Kaprodi"
                     $user->assignRole('Kaprodi');
+
+                    DB::commit();
 
                     return [
                         'data'    => $user,
@@ -70,19 +80,16 @@ class AdminProdiService
                         return ['message' => 'ID akun tidak ditemukan untuk update.'];
                     }
 
-                    // Perbarui data akun Kaprodi.
                     DB::beginTransaction();
-                    $user = User::findOrFail($data['id']);
-                    $user->update([
-                        'name'     => $data['name']     ?? $user->name,
-                        'email'    => $data['email']    ?? $user->email,
-                        'password' => isset($data['password']) ? bcrypt($data['password']) : $user->password,
-                    ]);
 
-                    // Hanya perbarui password jika disediakan.
-                    if (isset($data['password'])) {
-                        $user->password = bcrypt($data['password']);
-                    }
+                    // Ambil data akun Kaprodi yang akan diperbarui
+                    $user = User::role('Kaprodi')->findOrFail($data['id']);
+                    $user->update([
+                        'name'     => $data['name'] ?? $user->name,
+                        'email'    => $data['email'] ?? $user->email,
+                        'password' => isset($data['password']) ? bcrypt($data['password']) : $user->password,
+                        'prodi_id' => $data['prodi_id'] ?? $user->prodi_id, // Update jika diberikan
+                    ]);
 
                     DB::commit();
 
@@ -93,16 +100,18 @@ class AdminProdiService
                     break;
 
                 case 'delete':
-                    // Hapus akun Kaprodi berdasarkan id.
                     if (!isset($data['id'])) {
                         return ['message' => 'ID akun tidak ditemukan untuk dihapus.'];
                     }
 
                     DB::beginTransaction();
 
+                    // Hapus akun Kaprodi berdasarkan ID
                     $user = User::role('Kaprodi')->findOrFail($data['id']);
                     $user->delete();
+
                     DB::commit();
+
                     return [
                         'message' => 'Akun Kaprodi berhasil dihapus.'
                     ];
@@ -116,6 +125,7 @@ class AdminProdiService
             throw new Exception('Terjadi kesalahan: ' . $e->getMessage());
         }
     }
+
 
     public function kelolaAkunDosen(array $data): array
     {
