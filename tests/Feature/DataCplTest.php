@@ -7,13 +7,18 @@ use App\Models\Fakultas;
 use App\Models\Prodi;
 use App\Models\Role;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class DataCplTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
+
+    protected $user;
+    protected $adminProdiRole;
+    protected $permission;
+    protected $prodi;
 
     protected function setUp(): void
     {
@@ -22,121 +27,109 @@ class DataCplTest extends TestCase
         // Reset cache permission untuk menghindari error duplikat
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Pastikan ada satu data Fakultas dan Prodi untuk semua operasi CPL
+        // Pastikan ada data Fakultas dan Prodi untuk operasi CPL
         $fakultas = Fakultas::factory()->create([
             'kode_fakultas' => 'FK100',
             'nama_fakultas' => 'Pertambangan',
         ]);
-        Prodi::factory()->create([
+
+        $this->prodi = Prodi::factory()->create([
             'kode_prodi' => 'PRD100',
             'nama_prodi' => 'Pertambangan Batu Bara',
             'fakultas_id' => $fakultas->fakultas_id,
         ]);
+
+        // Buat role Admin Prodi dengan izin mengelola CPL
+        $this->adminProdiRole = Role::firstOrCreate(['name' => 'Admin Prodi', 'guard_name' => 'web']);
+        $this->permission = Permission::firstOrCreate(['name' => 'Mengelola data CPL', 'guard_name' => 'web']);
+
+        // Buat user acting (Admin Prodi) dan berikan role serta permission
+        $this->user = User::factory()->create([
+            'prodi_id' => $this->prodi->prodi_id
+        ]);
+        $this->user->assignRole($this->adminProdiRole);
+        $this->adminProdiRole->givePermissionTo($this->permission);
     }
 
     /**
-     * Test untuk menampilkan seluruh data CPL.
+     * Test mengambil seluruh data CPL.
      */
     public function test_view_all_data_cpl(): void
     {
-        $role = Role::firstOrCreate(['name' => 'Admin Prodi', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data CPL', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data CPL');
-
-        $prodi = Prodi::first();
-
-        // Buat beberapa data CPL.
-        CPL::factory()->create([
-            'kode_cpl'      => 'k_cpl444',
-            'nama_cpl'     => 'Nama1 CPL',
-            'deskripsi'     => 'Deskripsi1 CPL',
-            'prodi_id' => $prodi->prodi_id
-        ]);
-        CPL::factory()->create([
-            'kode_cpl'      => 'k_cpl555',
-            'nama_cpl'     => 'Nama2 CPL',
-            'deskripsi'     => 'Deskripsi2 CPL',
-            'prodi_id' => $prodi->prodi_id
+        Cpl::factory()->create([
+            'kode_cpl' => 'CPL444',
+            'nama_cpl' => 'Nama1 CPL',
+            'deskripsi' => 'Deskripsi1 CPL',
+            'prodi_id' => $this->prodi->prodi_id,
         ]);
 
-        $payload = [
-            'action' => 'view'
-        ];
+        Cpl::factory()->create([
+            'kode_cpl' => 'CPL555',
+            'nama_cpl' => 'Nama2 CPL',
+            'deskripsi' => 'Deskripsi2 CPL',
+            'prodi_id' => $this->prodi->prodi_id,
+        ]);
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-cpl', $payload);
+        $payload = ['action' => 'view'];
+
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-cpl', $payload);
+
         $response->assertStatus(200)
             ->assertJson([
                 'message' => 'Semua data CPL berhasil diambil.'
             ]);
 
-        $responseData = $response->json('data');
-        $this->assertIsArray($responseData);
-        $this->assertGreaterThanOrEqual(2, count($responseData));
+        $data = $response->json('data');
+        $this->assertIsArray($data);
+        $this->assertGreaterThanOrEqual(2, count($data));
     }
 
     /**
-     * Test untuk mengambil detail satu data CPL berdasarkan ID.
+     * Test mengambil detail satu CPL berdasarkan ID.
      */
     public function test_view_detail_data_cpl_berdasarkan_id(): void
     {
-        $role = Role::firstOrCreate(['name' => 'Admin Prodi', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data CPL', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data CPL');
-
-        $prodi = Prodi::first();
-        $cpl = CPL::factory()->create([
-            'kode_cpl'      => 'k_cpl999',
-            'nama_cpl'     => 'Nama CPL',
-            'deskripsi'     => 'Deskripsi3 CPL',
-            'prodi_id' => $prodi->prodi_id
+        $cpl = Cpl::factory()->create([
+            'kode_cpl' => 'CPL999',
+            'nama_cpl' => 'Nama CPL',
+            'deskripsi' => 'Deskripsi CPL',
+            'prodi_id' => $this->prodi->prodi_id,
         ]);
 
         $payload = [
             'action' => 'view',
-            'cpl_id'     => $cpl->cpl_id
+            'cpl_id' => $cpl->cpl_id,
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-cpl', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-cpl', $payload);
+
         $response->assertStatus(200)
             ->assertJson([
-                'message' => 'Data CPL berhasil diambil.'
+                'message' => 'Data CPL berhasil diambil.',
             ]);
 
-        $responseData = $response->json('data');
-        $this->assertEquals($cpl->cpl_id, $responseData['cpl_id']);
-        $this->assertEquals($cpl->prodi_id, $responseData['prodi_id']);
+        $data = $response->json('data');
+        $this->assertEquals($cpl->cpl_id, $data['cpl_id']);
+        $this->assertEquals($cpl->prodi_id, $data['prodi_id']);
     }
 
     /**
-     * Test untuk menyimpan data CPL baru.
+     * Test pembuatan data CPL berhasil.
      */
     public function test_store_data_cpl_berhasil(): void
     {
-        $prodi = Prodi::first();
-
-        // Buat role dan permission untuk user yang melakukan operasi
-        $role = Role::firstOrCreate(['name' => 'Admin Prodi', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data CPL', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data CPL');
-
         $payload = [
-            'action'      => 'store',
-            'kode_cpl'      => 'k_cpl999',
-            'nama_cpl'     => 'Store CPL',
-            'deskripsi'     => 'Deskripsi Store CPL',
-            'prodi_id' => $prodi->prodi_id
+            'action' => 'store',
+            'kode_cpl' => 'CPL999',
+            'nama_cpl' => 'Store CPL',
+            'deskripsi' => 'Deskripsi Store CPL',
+            'prodi_id' => $this->prodi->prodi_id,
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-cpl', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-cpl', $payload);
 
         $response->assertStatus(201)
             ->assertJson([
@@ -144,151 +137,123 @@ class DataCplTest extends TestCase
             ]);
 
         $this->assertDatabaseHas('cpl', [
-            'kode_cpl'  => 'k_cpl999',
-            'prodi_id' => $prodi->prodi_id,
+            'kode_cpl' => 'CPL999',
+            'prodi_id' => $this->prodi->prodi_id,
         ]);
     }
 
     /**
-     * Test untuk store data CPL gagal karena validasi.
+     * Test validasi gagal saat pembuatan data CPL.
      */
     public function test_store_data_cpl_validasi_gagal(): void
     {
-        // Atur role dan permission untuk user yang melakukan operasi.
-        $role = Role::firstOrCreate(['name' => 'Admin Prodi', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data CPL', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data CPL');
-
-        // Buat payload dengan data yang tidak valid: kosong atau tidak sesuai
         $payload = [
-            'action'      => 'store',
-            'kode_cpl'  => '',   // kosong, sehingga gagal validasi
-            'nama_cpl'  => '',   // kosong, sehingga gagal validasi
-            'deskripsi'  => '',   // kosong, sehingga gagal validasi
-            'prodi_id' => '',   // kosong, sehingga gagal validasi
+            'action' => 'store',
+            'kode_cpl' => '',
+            'nama_cpl' => '',
+            'deskripsi' => '',
+            'prodi_id' => '',
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-cpl', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-cpl', $payload);
 
-        // Harapkan status 422 beserta error validasi untuk field terkait
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['kode_cpl', 'nama_cpl', 'prodi_id']);
     }
 
     /**
-     * Test untuk update data CPL.
+     * Test update data CPL berhasil.
      */
     public function test_update_data_cpl_berhasil(): void
     {
-        $role = Role::firstOrCreate(['name' => 'Admin Prodi', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data CPL', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data CPL');
-
-        $prodi = Prodi::first();
-        $cpl = CPL::factory()->create([
-            'kode_cpl'      => 'k_cpl000',
-            'nama_cpl'     => 'Update CPL',
-            'deskripsi'     => 'Deskripsi Update CPL',
-            'prodi_id' => $prodi->prodi_id
+        $cpl = Cpl::factory()->create([
+            'kode_cpl' => 'CPL000',
+            'nama_cpl' => 'Update CPL',
+            'deskripsi' => 'Deskripsi Update CPL',
+            'prodi_id' => $this->prodi->prodi_id,
         ]);
 
-        $payload = [
-            'action'      => 'update',
-            'cpl_id'    => $cpl->cpl_id,
-            'kode_cpl'      => 'k_cpl888',
-            'nama_cpl'     => 'Updated CPL',
-            'deskripsi'     => 'Deskripsi Updated CPL',
-            'prodi_id' => $prodi->prodi_id
+        // Jika ingin update ke prodi yang berbeda, buat terlebih dahulu record prodi baru
+        $newProdi = Prodi::factory()->create(['nama_prodi' => 'Sistem Informasi']);
+
+        $updatePayload = [
+            'action' => 'update',
+            'cpl_id' => $cpl->cpl_id,
+            'kode_cpl' => 'CPL888',
+            'nama_cpl' => 'Updated CPL',
+            'deskripsi' => 'Deskripsi Updated CPL',
+            'prodi_id' => $newProdi->prodi_id,
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-cpl', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-cpl', $updatePayload);
+
         $response->assertStatus(200)
             ->assertJson([
-                'message' => 'Data CPL berhasil diperbarui.'
+                'message' => 'Data CPL berhasil diperbarui.',
             ]);
 
         $this->assertDatabaseHas('cpl', [
-            'cpl_id'   => $cpl->cpl_id,
-            'kode_cpl'      => 'k_cpl888',
-            'nama_cpl'     => 'Updated CPL',
-            'prodi_id' => $prodi->prodi_id
+            'cpl_id' => $cpl->cpl_id,
+            'kode_cpl' => 'CPL888',
+            'nama_cpl' => 'Updated CPL',
+            'deskripsi' => 'Deskripsi Updated CPL',
+            'prodi_id' => $newProdi->prodi_id,
         ]);
     }
 
     /**
-     * Test untuk update data CPL gagal karena validasi.
+     * Test validasi gagal saat update data CPL.
      */
     public function test_update_data_cpl_validasi_gagal(): void
     {
-        $role = Role::firstOrCreate(['name' => 'Admin Prodi', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data CPL', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data CPL');
-
-        $prodi = Prodi::first();
-
-        // Buat data CPL awal menggunakan factory.
-        $cpl = CPL::factory()->create([
-            'kode_cpl'      => 'k_cpl111',
-            'nama_cpl'     => 'Update gagal CPL',
-            'deskripsi'     => 'Deskripsi Update gagal CPL',
-            'prodi_id' => $prodi->prodi_id
+        $cpl = Cpl::factory()->create([
+            'kode_cpl' => 'CPL111',
+            'nama_cpl' => 'Update gagal CPL',
+            'deskripsi' => 'Deskripsi Update gagal CPL',
+            'prodi_id' => $this->prodi->prodi_id,
         ]);
 
-        // Buat payload update dengan data yang tidak valid
-        $payload = [
-            'action'      => 'update',
-            'cpl_id'    => $cpl->cpl_id,
-            'kode_cpl'  => '',         // kosong agar gagal validasi
-            'nama_cpl'  => '',         // kosong agar gagal validasi
-            'deskripsi'  => '',         // kosong agar gagal validasi
-            'prodi_id' => 9999,       // misalnya, id prodi tidak ada
+        $invalidPayload = [
+            'action' => 'update',
+            'cpl_id' => $cpl->cpl_id,
+            'kode_cpl' => '',         // Kosong agar gagal validasi
+            'nama_cpl' => '',         // Kosong agar gagal validasi
+            'deskripsi' => '',        // Kosong agar gagal validasi
+            'prodi_id' => 9999,       // ID prodi tidak valid
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-cpl', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-cpl', $invalidPayload);
 
-        // Harapkan status 422 dan validasi error untuk ketiga field
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['kode_cpl', 'nama_cpl', 'prodi_id']);
     }
 
     /**
-     * Test untuk menghapus data CPL.
+     * Test penghapusan data CPL berhasil.
      */
     public function test_delete_data_cpl_berhasil(): void
     {
-        $role = Role::firstOrCreate(['name' => 'Admin Prodi', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data CPL', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data CPL');
-
-        $prodi = Prodi::first();
-        $cpl = CPL::factory()->create([
-            'kode_cpl'      => 'k_cpl222',
-            'nama_cpl'     => 'Delete CPL',
-            'deskripsi'     => 'Deskripsi Delete CPL',
-            'prodi_id' => $prodi->prodi_id
+        $cpl = Cpl::factory()->create([
+            'kode_cpl' => 'CPL222',
+            'nama_cpl' => 'Delete CPL',
+            'deskripsi' => 'Deskripsi Delete CPL',
+            'prodi_id' => $this->prodi->prodi_id,
         ]);
 
         $payload = [
             'action' => 'delete',
-            'cpl_id'     => $cpl->cpl_id
+            'cpl_id' => $cpl->cpl_id,
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-cpl', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-cpl', $payload);
+
         $response->assertStatus(200)
             ->assertJson([
-                'message' => 'Data CPL berhasil dihapus.'
+                'message' => 'Data CPL berhasil dihapus.',
             ]);
 
         $this->assertDatabaseMissing('cpl', [
