@@ -652,7 +652,7 @@ class AdminProdiService
     }
 
     /**
-     * Mengelola pemetaan CPMK pada sebuah mata kuliah.
+     * Mengelola pemetaan CPL pada sebuah mata kuliah.
      *
      * Format input pada $data:
      * [
