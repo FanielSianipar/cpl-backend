@@ -6,13 +6,18 @@ use App\Models\Fakultas;
 use App\Models\Prodi;
 use App\Models\Role;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class DataProdiTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
+
+    protected $fakultas;
+    protected $adminUniversitasRole;
+    protected $permission;
+    protected $user;
 
     protected function setUp(): void
     {
@@ -21,11 +26,20 @@ class DataProdiTest extends TestCase
         // Reset cache permission untuk menghindari error duplikat
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Pastikan ada satu data Fakultas untuk semua operasi prodi
-        Fakultas::factory()->create([
+        // Buat data Fakultas sebagai acuan
+        $this->fakultas = Fakultas::factory()->create([
             'kode_fakultas' => 'FK01',
             'nama_fakultas' => 'Fakultas Teknik',
         ]);
+
+        // Setup role dan permission global untuk operasi Prodi
+        $this->adminUniversitasRole = Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
+        $this->permission = Permission::firstOrCreate(['name' => 'Mengelola data prodi', 'guard_name' => 'web']);
+
+        // Buat user acting (Admin Universitas) dan berikan role serta permission
+        $this->user = User::factory()->create();
+        $this->user->assignRole($this->adminUniversitasRole);
+        $this->adminUniversitasRole->givePermissionTo($this->permission);
     }
 
     /**
@@ -33,32 +47,25 @@ class DataProdiTest extends TestCase
      */
     public function test_view_all_data_prodi(): void
     {
-        $role = Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data prodi', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data prodi');
-
-        $fakultas = Fakultas::first();
-
-        // Buat beberapa data Prodi.
+        // Buat beberapa data Prodi
         Prodi::factory()->create([
             'kode_prodi'  => 'PRD001',
             'nama_prodi'  => 'Teknik Informatika',
-            'fakultas_id' => $fakultas->fakultas_id,
+            'fakultas_id' => $this->fakultas->fakultas_id,
         ]);
         Prodi::factory()->create([
             'kode_prodi'  => 'PRD002',
             'nama_prodi'  => 'Sistem Informasi',
-            'fakultas_id' => $fakultas->fakultas_id,
+            'fakultas_id' => $this->fakultas->fakultas_id,
         ]);
 
         $payload = [
             'action' => 'view'
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-prodi', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-prodi', $payload);
+
         $response->assertStatus(200)
             ->assertJson([
                 'message' => 'Semua data prodi berhasil diambil.'
@@ -74,26 +81,20 @@ class DataProdiTest extends TestCase
      */
     public function test_view_detail_data_prodi_berdasarkan_id(): void
     {
-        $role = Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data prodi', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data prodi');
-
-        $fakultas = Fakultas::first();
         $prodi = Prodi::factory()->create([
             'kode_prodi'  => 'PRD003',
             'nama_prodi'  => 'Teknik Elektro',
-            'fakultas_id' => $fakultas->fakultas_id,
+            'fakultas_id' => $this->fakultas->fakultas_id,
         ]);
 
         $payload = [
-            'action' => 'view',
-            'prodi_id'     => $prodi->prodi_id
+            'action'   => 'view',
+            'prodi_id' => $prodi->prodi_id,
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-prodi', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-prodi', $payload);
+
         $response->assertStatus(200)
             ->assertJson([
                 'message' => 'Data prodi berhasil diambil.'
@@ -109,24 +110,15 @@ class DataProdiTest extends TestCase
      */
     public function test_store_data_prodi_berhasil(): void
     {
-        $fakultas = Fakultas::first();
-
-        // Buat role dan permission untuk user yang melakukan operasi
-        $role = Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data prodi', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data prodi');
-
         $payload = [
             'action'      => 'store',
-            'kode_prodi'  => 'PRD001000',
+            'kode_prodi'  => 'PRD001',
             'nama_prodi'  => 'Teknik Informatika',
-            'fakultas_id' => $fakultas->fakultas_id,
+            'fakultas_id' => $this->fakultas->fakultas_id,
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-prodi', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-prodi', $payload);
 
         $response->assertStatus(201)
             ->assertJson([
@@ -136,7 +128,7 @@ class DataProdiTest extends TestCase
         $this->assertDatabaseHas('prodi', [
             'kode_prodi'  => 'PRD001',
             'nama_prodi'  => 'Teknik Informatika',
-            'fakultas_id' => $fakultas->fakultas_id,
+            'fakultas_id' => $this->fakultas->fakultas_id,
         ]);
     }
 
@@ -145,25 +137,16 @@ class DataProdiTest extends TestCase
      */
     public function test_store_data_prodi_validasi_gagal(): void
     {
-        // Atur role dan permission untuk user yang melakukan operasi.
-        $role = Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data prodi', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data prodi');
-
-        // Buat payload dengan data yang tidak valid: kosong atau tidak sesuai
         $payload = [
             'action'      => 'store',
             'kode_prodi'  => '',   // kosong, sehingga gagal validasi
             'nama_prodi'  => '',   // kosong, sehingga gagal validasi
-            'fakultas_id' => '',   // tidak valid, wajib angka dan harus ada di tabel fakultas
+            'fakultas_id' => '',   // tidak valid
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-prodi', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-prodi', $payload);
 
-        // Harapkan status 422 beserta error validasi untuk field terkait
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['kode_prodi', 'nama_prodi', 'fakultas_id']);
     }
@@ -173,29 +156,23 @@ class DataProdiTest extends TestCase
      */
     public function test_update_data_prodi_berhasil(): void
     {
-        $role = Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data prodi', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data prodi');
-
-        $fakultas = Fakultas::first();
         $prodi = Prodi::factory()->create([
             'kode_prodi'  => 'PRD004',
             'nama_prodi'  => 'Teknik Mesin',
-            'fakultas_id' => $fakultas->fakultas_id,
+            'fakultas_id' => $this->fakultas->fakultas_id,
         ]);
 
         $payload = [
             'action'      => 'update',
             'prodi_id'    => $prodi->prodi_id,
-            'kode_prodi'  => 'PRD004', // kode yang sama atau bisa diubah
+            'kode_prodi'  => 'PRD004', // tetap atau diubah
             'nama_prodi'  => 'Teknik Mesin Terbaru',
-            'fakultas_id' => $fakultas->fakultas_id,
+            'fakultas_id' => $this->fakultas->fakultas_id,
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-prodi', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-prodi', $payload);
+
         $response->assertStatus(201)
             ->assertJson([
                 'message' => 'Data prodi berhasil diperbarui.'
@@ -212,34 +189,23 @@ class DataProdiTest extends TestCase
      */
     public function test_update_data_prodi_validasi_gagal(): void
     {
-        $role = Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data prodi', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data prodi');
-
-        $fakultas = Fakultas::first();
-
-        // Buat data prodi awal menggunakan factory.
         $prodi = Prodi::factory()->create([
             'kode_prodi'  => 'PRD006',
             'nama_prodi'  => 'Teknik Sipil',
-            'fakultas_id' => $fakultas->fakultas_id,
+            'fakultas_id' => $this->fakultas->fakultas_id,
         ]);
 
-        // Buat payload update dengan data yang tidak valid
         $payload = [
             'action'      => 'update',
             'prodi_id'    => $prodi->prodi_id,
-            'kode_prodi'  => '',         // kosong agar gagal validasi
-            'nama_prodi'  => '',         // kosong agar gagal validasi
-            'fakultas_id' => 9999,       // misalnya, id fakultas tidak ada
+            'kode_prodi'  => '',         // harus diisi
+            'nama_prodi'  => '',         // harus diisi
+            'fakultas_id' => 9999,        // ID fakultas tidak valid
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-prodi', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-prodi', $payload);
 
-        // Harapkan status 422 dan validasi error untuk ketiga field
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['kode_prodi', 'nama_prodi', 'fakultas_id']);
     }
@@ -249,26 +215,20 @@ class DataProdiTest extends TestCase
      */
     public function test_delete_data_prodi_berhasil(): void
     {
-        $role = Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
-        Permission::firstOrCreate(['name' => 'Mengelola data prodi', 'guard_name' => 'web']);
-
-        $user = User::factory()->create();
-        $user->assignRole($role);
-        $role->givePermissionTo('Mengelola data prodi');
-
-        $fakultas = Fakultas::first();
         $prodi = Prodi::factory()->create([
             'kode_prodi'  => 'PRD005',
             'nama_prodi'  => 'Teknik Industri',
-            'fakultas_id' => $fakultas->fakultas_id,
+            'fakultas_id' => $this->fakultas->fakultas_id,
         ]);
 
         $payload = [
-            'action' => 'delete',
-            'prodi_id'     => $prodi->prodi_id
+            'action'   => 'delete',
+            'prodi_id' => $prodi->prodi_id,
         ];
 
-        $response = $this->actingAs($user)->postJson('/api/kelola-data-prodi', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-prodi', $payload);
+
         $response->assertStatus(200)
             ->assertJson([
                 'message' => 'Data prodi berhasil dihapus.'

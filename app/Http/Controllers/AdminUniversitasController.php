@@ -36,7 +36,7 @@ class AdminUniversitasController extends Controller
 
         $result = $this->adminUniversitasService->kelolaDataProdi($data);
 
-        // Status code ditetapkan berdasarkan jenis aksi, misal 201 untuk store/update, 200 untuk view/delete
+        // Status code ditetapkan berdasarkan jenis aksi, misal 201 untuk store, 200 untuk view, update, delete
         $statusCode = in_array($data['action'], ['store', 'update']) ? 201 : 200;
 
         return response()->json($result, $statusCode);
