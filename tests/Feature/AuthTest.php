@@ -3,40 +3,49 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Arr;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 use Spatie\Permission\Models\Role;
 
 class AuthTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
-    // Fungsi untuk set up lingkungan test
+    protected $user;
+    protected $role;
+    protected $permission;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Buat role untuk testing
-        Role::create(['name' => 'Admin Universitas', 'Admin Prodi', 'Kaprodi', 'Dosen']);
+        // Reset permission cache untuk menghindari error duplikat
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // Buat role dan permission secara global
+        $this->role = Role::firstOrCreate(['name' => 'Admin Universitas', 'guard_name' => 'web']);
+        $this->permission = Permission::firstOrCreate(['name' => 'Mengelola data prodi', 'guard_name' => 'web']);
+
+        // Buat user dummy secara global dan assign role serta permission
+        $this->user = User::factory()->create();
+        $this->user->assignRole($this->role);
+        $this->role->givePermissionTo($this->permission);
     }
 
-    // Contoh test untuk login sukses
+    /**
+     * Test untuk login sukses dengan kredensial yang valid.
+     */
     public function test_user_can_login_with_valid_credentials()
     {
-        // Buat user dummy
-        $user = User::factory()->create();
-        $roleNames = Role::pluck('name')->toArray();
-        $user->assignRole(Arr::random($roleNames));
-
-        // Kirim request login
+        // Pastikan password yang dihasilkan factory adalah "password"
         $response = $this->postJson('/api/login', [
-            'email' => $user->email,
+            'email'    => $this->user->email,
             'password' => 'password',
         ]);
 
-        // Pastikan respons sukses
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'access_token',
@@ -44,44 +53,32 @@ class AuthTest extends TestCase
             ]);
     }
 
-    // Contoh test untuk gagal login
+    /**
+     * Test untuk gagal login dengan kredensial yang tidak valid.
+     */
     public function test_user_cannot_login_with_invalid_credentials()
     {
-        // Buat user dummy
-        $user = User::factory()->create();
-        $roleNames = Role::pluck('name')->toArray();
-        $user->assignRole(Arr::random($roleNames));
-
-        // Kirim request login dengan password salah
         $response = $this->postJson('/api/login', [
-            'email' => 'adminuniv@example.com',
+            'email'    => 'adminuniv@example.com',
             'password' => 'wrongpassword',
         ]);
 
-        // Pastikan respons gagal
         $response->assertStatus(401)
             ->assertJson([
                 'message' => 'Unauthorized'
             ]);
     }
 
-    // Contoh test untuk logout
+    /**
+     * Test untuk logout: user yang telah autentikasi dapat logout dengan sukses.
+     */
     public function test_authenticated_user_can_logout_successfully()
     {
-        // Buat user dummy
-        $user = User::factory()->create();
+        // Simulasikan user sudah login menggunakan Sanctum.
+        Sanctum::actingAs($this->user, ['*']);
 
-        // Mendaftarkan role secara acak
-        $roleNames = Role::pluck('name')->toArray();
-        $user->assignRole(Arr::random($roleNames));
-
-        // Simulasikan login
-        Sanctum::actingAs($user, ['*']);
-
-        // Kirim request logout
         $response = $this->postJson('/api/logout');
 
-        // Pastikan respons logout sukses
         $response->assertStatus(200)
             ->assertJson([
                 'message' => 'Logged out'
