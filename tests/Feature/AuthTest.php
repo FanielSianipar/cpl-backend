@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Arr;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
