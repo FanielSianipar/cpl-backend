@@ -75,6 +75,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/kelola-data-mata-kuliah', [AdminProdiController::class, 'kelolaDataMataKuliah']);
         Route::delete('/kelola-data-mata-kuliah', [AdminProdiController::class, 'kelolaDataMataKuliah']);
     });
+    // Kelola data kelas
+    Route::middleware(['role:Admin Prodi', 'permission:Mengelola data kelas'])->group(function () {
+        Route::get('/kelola-data-kelas', [AdminProdiController::class, 'kelolaDataKelas']);
+        Route::post('/kelola-data-kelas', [AdminProdiController::class, 'kelolaDataKelas']);
+        Route::put('/kelola-data-kelas', [AdminProdiController::class, 'kelolaDataKelas']);
+        Route::delete('/kelola-data-kelas', [AdminProdiController::class, 'kelolaDataKelas']);
+    });
     // Kelola data cpl
     Route::middleware(['role:Admin Prodi', 'permission:Mengelola data CPL'])->group(function () {
         Route::get('/kelola-data-cpl', [AdminProdiController::class, 'kelolaDataCpl']);

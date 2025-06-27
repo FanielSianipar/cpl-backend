@@ -32,6 +32,11 @@ class MataKuliah extends Model
         return $this->belongsTo(Prodi::class, 'prodi_id', 'prodi_id');
     }
 
+    public function kelas()
+    {
+        return $this->hasMany(Kelas::class, 'mata_kuliah_id', 'mata_kuliah_id');
+    }
+
     /**
      * Relasi many-to-many ke CPL dengan pivot (dengan bobot).
      */

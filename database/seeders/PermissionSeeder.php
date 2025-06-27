@@ -18,6 +18,7 @@ class PermissionSeeder extends Seeder
         Permission::create(['name' => 'Mengelola akun dosen']);
         Permission::create(['name' => 'Mengelola data mahasiswa']);
         Permission::create(['name' => 'Mengelola data mata kuliah']);
+        Permission::create(['name' => 'Mengelola data kelas']);
         Permission::create(['name' => 'Mengelola data CPL']);
         Permission::create(['name' => 'Mengelola data CPMK']);
         Permission::create(['name' => 'Melakukan pemetaan CPL']);
@@ -47,6 +48,7 @@ class PermissionSeeder extends Seeder
                 'Mengelola akun dosen',
                 'Mengelola data mahasiswa',
                 'Mengelola data mata kuliah',
+                'Mengelola data kelas',
                 'Mengelola data CPL',
                 'Mengelola data CPMK',
                 'Melakukan pemetaan CPL',

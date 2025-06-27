@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CPL;
 use App\Models\CPMK;
+use App\Models\Kelas;
 use App\Models\Mahasiswa;
 use App\Models\MataKuliah;
 use App\Models\Prodi;
@@ -427,6 +428,114 @@ class AdminProdiService
                     DB::commit();
                     return [
                         'message' => 'Data mata kuliah berhasil dihapus.'
+                    ];
+                    break;
+
+                default:
+                    throw new Exception('Aksi tidak valid atau belum disediakan.');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw new Exception('Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    public function kelolaDataKelas(array $data): array
+    {
+        $action = $data['action'] ?? null;
+
+        try {
+            switch ($action) {
+                case 'view':
+                    // Jika terdapat parameter id, ambil detail satu data kelas.
+                    if (isset($data['kelas_id'])) {
+                        $kelas = Kelas::with(['mataKuliah' => function ($query) {
+                            $query->select('mata_kuliah_id', 'kode_mata_kuliah', 'nama_mata_kuliah');
+                        }])
+                            ->select('kelas_id', 'kode_kelas', 'nama_kelas', 'mata_kuliah_id')
+                            ->findOrFail($data['kelas_id']);
+                        return [
+                            'data'    => $kelas,
+                            'message' => 'Data kelas berhasil diambil.'
+                        ];
+                    } else {
+                        $kelas = Kelas::with(['mataKuliah' => function ($query) {
+                            $query->select('mata_kuliah_id', 'kode_mata_kuliah', 'nama_mata_kuliah');
+                        }])
+                            ->select('kelas_id', 'kode_kelas', 'nama_kelas', 'mata_kuliah_id')
+                            ->get();
+                        return [
+                            'data'    => $kelas,
+                            'message' => 'Semua data kelas berhasil diambil.'
+                        ];
+                    }
+                    break;
+
+                case 'store':
+                    // Tambah data Kelas baru.
+                    DB::beginTransaction();
+                    $kelas = Kelas::create([
+                        'kode_kelas'      => $data['kode_kelas'],
+                        'nama_kelas'     => $data['nama_kelas'],
+                        'semester'     => $data['semester'],
+                        'tahun_ajaran'     => $data['tahun_ajaran'],
+                        'mata_kuliah_id' => $data['mata_kuliah_id'],
+                    ]);
+                    DB::commit();
+
+                    return [
+                        'data'    => $kelas,
+                        'message' => 'Data kelas berhasil dibuat.'
+                    ];
+                    break;
+
+                case 'update':
+                    if (!isset($data['kelas_id'])) {
+                        return ['message' => 'ID kelas tidak ditemukan untuk update.'];
+                    }
+
+                    // Perbarui data kelas.
+                    DB::beginTransaction();
+                    $kelas = Kelas::with('mataKuliah')->findOrFail($data['kelas_id']);
+
+                    // Ambil mata_kuliah_id dari request atau gunakan yang sudah ada
+                    $mataKuliahId = $data['mata_kuliah_id'] ?? $kelas->mataKuliah->mata_kuliah_id;
+
+                    // Pastikan mata kuliah yang dikirimkan ada dalam database sebelum update
+                    if (!MataKuliah::where('mata_kuliah_id', $mataKuliahId)->exists()) {
+                        return ['message' => 'Mata kuliah yang diberikan tidak valid atau tidak ditemukan.'];
+                    }
+
+                    $kelas->update([
+                        'kode_kelas'     => $data['kode_kelas']     ?? $kelas->kode_kelas,
+                        'nama_kelas'     => $data['nama_kelas']     ?? $kelas->nama_kelas,
+                        'semester'     => $data['semester']     ?? $kelas->semester,
+                        'tahun_ajaran'     => $data['tahun_ajaran']     ?? $kelas->tahun_ajaran,
+                        'mata_kuliah_id' => $mataKuliahId
+                    ]);
+                    $kelas = $kelas->fresh('mataKuliah');
+
+                    DB::commit();
+
+                    return [
+                        'data'    => $kelas,
+                        'message' => 'Data kelas berhasil diperbarui.'
+                    ];
+                    break;
+
+                case 'delete':
+                    // Hapus data kelas berdasarkan id.
+                    if (!isset($data['kelas_id'])) {
+                        return ['message' => 'ID kelas tidak ditemukan untuk dihapus.'];
+                    }
+
+                    DB::beginTransaction();
+
+                    $kelas = Kelas::findOrFail($data['kelas_id']);
+                    $kelas->delete();
+                    DB::commit();
+                    return [
+                        'message' => 'Data kelas berhasil dihapus.'
                     ];
                     break;
 
