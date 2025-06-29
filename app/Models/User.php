@@ -60,4 +60,12 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Prodi::class, 'prodi_id');
     }
+
+    // kelas yang diampu user (dosen)
+    public function kelasDiampu()
+    {
+        return $this->belongsToMany(Kelas::class, 'kelas_dosen', 'dosen_id', 'kelas_id')
+            ->withPivot('jabatan')
+            ->withTimestamps();
+    }
 }

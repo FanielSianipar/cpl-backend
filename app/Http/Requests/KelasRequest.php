@@ -49,6 +49,15 @@ class KelasRequest extends FormRequest
                 'semester'    => 'required|integer|max:2',
                 'tahun_ajaran' => 'required|string|max:10',
                 'mata_kuliah_id' => 'sometimes|exists:mata_kuliah,mata_kuliah_id',
+                'dosens'            => 'sometimes|array',
+                'dosens.*.dosen_id' => [
+                    'required',
+                    'exists:users,id'
+                ],
+                'dosens.*.jabatan'  => [
+                    'required',
+                    Rule::in(['Dosen Utama', 'Pendamping Dosen 1', 'Pendamping Dosen 2'])
+                ],
             ];
         }
 
@@ -64,6 +73,16 @@ class KelasRequest extends FormRequest
             'semester'    => 'required|integer|max:2',
             'tahun_ajaran' => 'required|string|max:10',
             'mata_kuliah_id' => 'required|exists:mata_kuliah,mata_kuliah_id',
+            'dosens'            => 'sometimes|array',
+            'dosens.*.dosen_id' => [
+                'required',
+                'exists:users,id'
+            ],
+            'dosens.*.jabatan'  => [
+                'required',
+                Rule::in(['Dosen Utama', 'Pendamping Dosen 1', 'Pendamping Dosen 2'])
+            ],
+
         ];
     }
 

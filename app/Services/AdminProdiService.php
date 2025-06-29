@@ -447,28 +447,29 @@ class AdminProdiService
         try {
             switch ($action) {
                 case 'view':
-                    // Jika terdapat parameter id, ambil detail satu data kelas.
+                    $kelasQuery = Kelas::with([
+                        // Ambil mata_kuliah dengan kolom spesifik
+                        'mataKuliah:mata_kuliah_id,kode_mata_kuliah,nama_mata_kuliah',
+                        // Ambil dosen dengan kolom id,name dan pivot.jabatan
+                        'dosens:id,name'
+                    ])
+                        // Select hanya kolom dari tabel kelas
+                        ->select('kelas_id', 'kode_kelas', 'nama_kelas', 'semester', 'tahun_ajaran', 'mata_kuliah_id');
+
                     if (isset($data['kelas_id'])) {
-                        $kelas = Kelas::with(['mataKuliah' => function ($query) {
-                            $query->select('mata_kuliah_id', 'kode_mata_kuliah', 'nama_mata_kuliah');
-                        }])
-                            ->select('kelas_id', 'kode_kelas', 'nama_kelas', 'mata_kuliah_id')
-                            ->findOrFail($data['kelas_id']);
+                        $kelas = $kelasQuery->findOrFail($data['kelas_id']);
                         return [
                             'data'    => $kelas,
                             'message' => 'Data kelas berhasil diambil.'
                         ];
-                    } else {
-                        $kelas = Kelas::with(['mataKuliah' => function ($query) {
-                            $query->select('mata_kuliah_id', 'kode_mata_kuliah', 'nama_mata_kuliah');
-                        }])
-                            ->select('kelas_id', 'kode_kelas', 'nama_kelas', 'mata_kuliah_id')
-                            ->get();
-                        return [
-                            'data'    => $kelas,
-                            'message' => 'Semua data kelas berhasil diambil.'
-                        ];
                     }
+
+                    $all = $kelasQuery->get();
+                    return [
+                        'data'    => $all,
+                        'message' => 'Semua data kelas berhasil diambil.'
+                    ];
+
                     break;
 
                 case 'store':
@@ -481,10 +482,21 @@ class AdminProdiService
                         'tahun_ajaran'     => $data['tahun_ajaran'],
                         'mata_kuliah_id' => $data['mata_kuliah_id'],
                     ]);
+
+                    // menambahkan dosen pengampu ke kelas
+                    if (!empty($data['dosens']) && is_array($data['dosens'])) {
+                        $sync = [];
+                        foreach ($data['dosens'] as $dosen) {
+                            // validasi jabatan dan dosen_id bisa ditambahkan di sini
+                            $sync[$dosen['dosen_id']] = ['jabatan' => $dosen['jabatan']];
+                        }
+                        $kelas->dosens()->sync($sync);
+                    }
+
                     DB::commit();
 
                     return [
-                        'data'    => $kelas,
+                        'data'    => $kelas->load('mataKuliah', 'dosens'),
                         'message' => 'Data kelas berhasil dibuat.'
                     ];
                     break;
@@ -513,9 +525,19 @@ class AdminProdiService
                         'tahun_ajaran'     => $data['tahun_ajaran']     ?? $kelas->tahun_ajaran,
                         'mata_kuliah_id' => $mataKuliahId
                     ]);
-                    $kelas = $kelas->fresh('mataKuliah');
+
+                    if (isset($data['dosens']) && is_array($data['dosens'])) {
+                        $sync = [];
+                        foreach ($data['dosens'] as $dosen) {
+                            $sync[$dosen['dosen_id']] = ['jabatan' => $dosen['jabatan']];
+                        }
+                        // sync = replace; syncWithoutDetaching = tambah tanpa menghapus
+                        $kelas->dosens()->sync($sync);
+                    }
 
                     DB::commit();
+
+                    $kelas = $kelas->load('mataKuliah', 'dosens');
 
                     return [
                         'data'    => $kelas,

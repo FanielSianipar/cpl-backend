@@ -16,7 +16,6 @@ return new class extends Migration
             $table->unsignedBigInteger('mata_kuliah_id');
             $table->string('kode_kelas', 15);
             $table->string('nama_kelas', 50);
-            $table->unsignedBigInteger('dosen_id')->nullable(); // Opsional
             $table->string('semester', 20)->nullable();
             $table->string('tahun_ajaran', 10)->nullable();
             $table->timestamps();
@@ -25,12 +24,6 @@ return new class extends Migration
                 ->references('mata_kuliah_id')
                 ->on('mata_kuliah')
                 ->onDelete('cascade');
-
-            // Jika dosen disimpan di tabel 'users', tambahkan FK seperti berikut:
-            // $table->foreign('dosen_id')
-            //       ->references('id')
-            //       ->on('users')
-            //       ->onDelete('set null');
         });
     }
 
