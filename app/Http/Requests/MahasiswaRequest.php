@@ -51,7 +51,6 @@ class MahasiswaRequest extends FormRequest
                     'email',
                     Rule::unique('mahasiswa', 'email')->ignore($this->input('mahasiswa_id'), 'mahasiswa_id')
                 ],
-                'prodi_id' => 'sometimes|exists:prodi,prodi_id',
             ];
         }
 
@@ -65,7 +64,6 @@ class MahasiswaRequest extends FormRequest
             'npm'  => 'required|string|max:10|unique:mahasiswa,npm',
             'name'  => 'required|string|max:50',
             'email'    => ['required', 'email', 'unique:mahasiswa,email'],
-            'prodi_id' => 'required|exists:prodi,prodi_id',
         ];
     }
 
@@ -89,8 +87,6 @@ class MahasiswaRequest extends FormRequest
             'email.required' => 'Email mahasiswa wajib diisi.',
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah digunakan oleh mahasiswa lain.',
-            'prodi_id.required' => 'Program studi wajib diisi.',
-            'prodi_id.exists' => 'Program studi tidak ditemukan.',
         ];
     }
 }

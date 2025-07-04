@@ -268,7 +268,7 @@ class AdminProdiService
                         'npm'      => $data['npm'],
                         'name'     => $data['name'],
                         'email'    => $data['email'],
-                        'prodi_id' => $data['prodi_id'],
+                        'prodi_id' => auth()->user()->prodi_id,
                     ]);
                     DB::commit();
 
