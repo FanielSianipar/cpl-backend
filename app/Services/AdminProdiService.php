@@ -242,7 +242,7 @@ class AdminProdiService
                         $mahasiswa = Mahasiswa::with(['Prodi' => function ($query) {
                             $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
                         }])
-                            ->select('mahasiswa_id', 'npm', 'name', 'email', 'prodi_id')
+                            ->select('mahasiswa_id', 'npm', 'name', 'angkatan', 'email', 'prodi_id')
                             ->findOrFail($data['mahasiswa_id']);
                         return [
                             'data'    => $mahasiswa,
@@ -252,7 +252,7 @@ class AdminProdiService
                         $mahasiswas = Mahasiswa::with(['prodi' => function ($query) {
                             $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
                         }])
-                            ->select('mahasiswa_id', 'npm', 'name', 'email', 'prodi_id')
+                            ->select('mahasiswa_id', 'npm', 'name', 'angkatan', 'email', 'prodi_id')
                             ->get();
                         return [
                             'data'    => $mahasiswas,
@@ -267,6 +267,7 @@ class AdminProdiService
                     $mahasiswa = Mahasiswa::create([
                         'npm'      => $data['npm'],
                         'name'     => $data['name'],
+                        'angkatan' => $data['angkatan'],
                         'email'    => $data['email'],
                         'prodi_id' => auth()->user()->prodi_id,
                     ]);
@@ -298,6 +299,7 @@ class AdminProdiService
                     $mahasiswa->update([
                         'npm'     => $data['npm']     ?? $mahasiswa->npm,
                         'name'     => $data['name']     ?? $mahasiswa->name,
+                        'angkatan' => $data['angkatan'] ?? $mahasiswa->angkatan,
                         'email'    => $data['email']    ?? $mahasiswa->email,
                         'prodi_id' => $prodi_id
                     ]);

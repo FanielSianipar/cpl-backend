@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id('mahasiswa_id');
             $table->string('npm', 15)->unique();
             $table->string('name', 50);
+            $table->year('angkatan');
             $table->string('email', 50)->unique();
             $table->unsignedBigInteger('prodi_id');
             $table->foreign('prodi_id')
