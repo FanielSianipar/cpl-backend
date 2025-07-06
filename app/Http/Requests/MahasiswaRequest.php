@@ -67,7 +67,7 @@ class MahasiswaRequest extends FormRequest
             'name'  => 'required|string|max:50',
             'angkatan' => 'required|integer|digits:4|between:2000,' . date('Y'),
             'email'    => ['required', 'email', 'unique:mahasiswa,email'],
-            'prodi_id' => 'required|exists:prodi,prodi_id',
+            'prodi_id' => 'exists:prodi,prodi_id',
         ];
     }
 
@@ -95,7 +95,6 @@ class MahasiswaRequest extends FormRequest
             'email.required' => 'Email mahasiswa wajib diisi.',
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah digunakan oleh mahasiswa lain.',
-            'prodi_id.required' => 'Program studi wajib diisi.',
             'prodi_id.exists' => 'Program studi tidak ditemukan.',
         ];
     }
