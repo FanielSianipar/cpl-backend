@@ -11,6 +11,7 @@ use App\Http\Requests\MataKuliahRequest;
 use App\Http\Requests\PemetaanCplRequest;
 use App\Http\Requests\PemetaanCpmkRequest;
 use App\Http\Requests\StoreAkunRequest;
+use App\Http\Requests\SubPenilaianRequest;
 use App\Services\AdminProdiService;
 
 class AdminProdiController extends Controller
@@ -211,6 +212,26 @@ class AdminProdiController extends Controller
         $data['action'] = $request->input('action');
 
         $result = $this->adminProdiService->pemetaanCpmk($data);
+
+        // Status code ditetapkan berdasarkan jenis aksi, 201 untuk store, 200 untuk view, update, delete
+        $statusCode = in_array($data['action'], ['store']) ? 201 : 200;
+
+        // Jika pesan tidak mengandung kata "berhasil" (artinya terjadi error), override status code menjadi 422
+        if (stripos($result['message'], 'berhasil') === false) {
+            $statusCode = 422;
+        }
+
+        return response()->json($result, $statusCode);
+    }
+
+    public function kelolaSubPenilaian(SubPenilaianRequest $request)
+    {
+        // Dapatkan data tervalidasi, lalu tambahkan key 'action' (misalnya dikirim via query atau body)
+        $data = $request->validated();
+        // Pastikan key 'action' diatur melalui request (misalnya store, update, view, delete)
+        $data['action'] = $request->input('action');
+
+        $result = $this->adminProdiService->kelolaSubPenilaian($data);
 
         // Status code ditetapkan berdasarkan jenis aksi, 201 untuk store, 200 untuk view, update, delete
         $statusCode = in_array($data['action'], ['store']) ? 201 : 200;

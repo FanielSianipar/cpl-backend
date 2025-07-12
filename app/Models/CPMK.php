@@ -38,8 +38,20 @@ class CPMK extends Model
      */
     public function mataKuliahs()
     {
-        return $this->belongsToMany(MataKuliah::class, 'mata_kuliah_cpmk', 'cpmk_id', 'mata_kuliah_id')
-            ->withPivot('percentage', 'cpl_id')
+        return $this->belongsToMany(MataKuliah::class, 'cpmk_mata_kuliah', 'cpmk_id', 'mata_kuliah_id')
+            ->withPivot('bobot', 'cpl_id')
+            ->withTimestamps();
+    }
+
+    public function subPenilaian()
+    {
+        return $this->belongsToMany(
+            SubPenilaian::class,
+            'sub_penilaian_cpmk_mk',
+            'cpmk_id',
+            'sub_penilaian_id'
+        )
+            ->withPivot(['mata_kuliah_id', 'cpl_id', 'bobot'])
             ->withTimestamps();
     }
 }

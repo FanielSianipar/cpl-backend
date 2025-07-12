@@ -15,6 +15,13 @@ use Illuminate\Support\Str;
 
 class AdminProdiService
 {
+    protected SubPenilaianService $subPenilaianService;
+
+    public function __construct(SubPenilaianService $subPenilaianService)
+    {
+        $this->subPenilaianService = $subPenilaianService;
+    }
+
     /**
      * Kelola akun Admin Universitas melalui model User.
      * Operasi yang didukung: view, store, update, dan delete.
@@ -1116,5 +1123,10 @@ class AdminProdiService
             DB::rollBack();
             return ['message' => 'Pemetaan CPMK gagal: ' . $e->getMessage()];
         }
+    }
+
+    public function kelolaSubPenilaian(array $payload): array
+    {
+        return $this->subPenilaianService->kelolaSubPenilaian($payload);
     }
 }

@@ -110,6 +110,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/pemetaan-cpmk', [AdminProdiController::class, 'pemetaanCpmk']);
         Route::delete('/pemetaan-cpmk', [AdminProdiController::class, 'pemetaanCpmk']);
     });
+    // Kelola sub penilaian
+    Route::middleware(['role:Admin Prodi', 'permission:Mengelola sub penilaian'])->group(function () {
+        Route::get('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
+        Route::post('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
+        Route::put('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
+        Route::delete('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
+    });
 
     // // Kaprodi
     // Route::middleware(['role:kaprodi'])->group(function () {
