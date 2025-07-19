@@ -47,7 +47,7 @@ class CpmkRequest extends FormRequest
                 ],
                 'nama_cpmk'  => 'required|string|max:50',
                 'deskripsi' => 'required|string|max:500',
-                'prodi_id' => 'sometimes|exists:prodi,prodi_id',
+                'prodi_id' => 'exists:prodi,prodi_id',
             ];
         }
 
@@ -61,7 +61,7 @@ class CpmkRequest extends FormRequest
             'kode_cpmk'  => 'required|string|max:10|unique:cpmk,kode_cpmk',
             'nama_cpmk'  => 'required|string|max:50',
             'deskripsi' => 'required|string|max:500',
-            'prodi_id' => 'required|exists:prodi,prodi_id',
+            'prodi_id' => 'exists:prodi,prodi_id',
         ];
     }
 
@@ -85,7 +85,6 @@ class CpmkRequest extends FormRequest
             'deskripsi.required' => 'Deskripsi CPMK wajib diisi.',
             'deskripsi.string' => 'Deskripsi CPMK harus berupa teks.',
             'deskripsi.max' => 'Deskripsi CPMK maksimal terdiri dari 500 karakter.',
-            'prodi_id.required' => 'Program studi wajib diisi.',
             'prodi_id.exists' => 'Program studi tidak ditemukan.',
         ];
     }

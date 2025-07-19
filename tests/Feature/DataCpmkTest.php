@@ -44,9 +44,8 @@ class DataCpmkTest extends TestCase
         $this->permission = Permission::firstOrCreate(['name' => 'Mengelola data CPMK', 'guard_name' => 'web']);
 
         // Buat user acting (Admin Prodi) dan berikan role serta permission
-        $this->user = User::factory()->create([
-            'prodi_id' => $this->prodi->prodi_id
-        ]);
+        $this->user = User::factory()->create();
+        $this->user->prodi_id = $this->prodi->prodi_id;
         $this->user->assignRole($this->adminProdiRole);
         $this->adminProdiRole->givePermissionTo($this->permission);
     }
@@ -60,14 +59,14 @@ class DataCpmkTest extends TestCase
             'kode_cpmk' => 'CPMK444',
             'nama_cpmk' => 'Nama1 CPMK',
             'deskripsi' => 'Deskripsi1 CPMK',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         Cpmk::factory()->create([
             'kode_cpmk' => 'CPMK555',
             'nama_cpmk' => 'Nama2 CPMK',
             'deskripsi' => 'Deskripsi2 CPMK',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $payload = ['action' => 'view'];
@@ -94,7 +93,7 @@ class DataCpmkTest extends TestCase
             'kode_cpmk' => 'CPMK999',
             'nama_cpmk' => 'Nama CPMK',
             'deskripsi' => 'Deskripsi CPMK',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $payload = [
@@ -124,7 +123,7 @@ class DataCpmkTest extends TestCase
             'kode_cpmk' => 'CPMK999',
             'nama_cpmk' => 'Store CPMK',
             'deskripsi' => 'Deskripsi Store CPMK',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ];
 
         $response = $this->actingAs($this->user)->postJson('/api/kelola-data-cpmk', $payload);
@@ -136,7 +135,7 @@ class DataCpmkTest extends TestCase
 
         $this->assertDatabaseHas('cpmk', [
             'kode_cpmk' => 'CPMK999',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
     }
 
@@ -168,10 +167,8 @@ class DataCpmkTest extends TestCase
             'kode_cpmk' => 'CPMK000',
             'nama_cpmk' => 'CPMK Lama',
             'deskripsi' => 'Deskripsi Lama',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
-
-        $newProdi = Prodi::factory()->create();
 
         $payload = [
             'action' => 'update',
@@ -179,7 +176,6 @@ class DataCpmkTest extends TestCase
             'kode_cpmk' => 'CPMK888',
             'nama_cpmk' => 'CPMK Baru',
             'deskripsi' => 'Deskripsi Baru',
-            'prodi_id' => $newProdi->prodi_id,
         ];
 
         $response = $this->actingAs($this->user)->postJson('/api/kelola-data-cpmk', $payload);
@@ -193,7 +189,6 @@ class DataCpmkTest extends TestCase
             'prodi_id' => $cpmk->prodi_id,
             'kode_cpmk' => 'CPMK888',
             'nama_cpmk' => 'CPMK Baru',
-            'prodi_id' => $newProdi->prodi_id,
         ]);
     }
 
@@ -206,7 +201,7 @@ class DataCpmkTest extends TestCase
             'kode_cpmk' => 'CPMK111',
             'nama_cpmk' => 'CPMK Awal',
             'deskripsi' => 'Deskripsi Awal',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $payload = [
@@ -233,7 +228,7 @@ class DataCpmkTest extends TestCase
             'kode_cpmk' => 'CPMK222',
             'nama_cpmk' => 'CPMK Hapus',
             'deskripsi' => 'Deskripsi Hapus',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $payload = [

@@ -703,7 +703,7 @@ class AdminProdiService
                         'kode_cpmk'      => $data['kode_cpmk'],
                         'nama_cpmk'     => $data['nama_cpmk'],
                         'deskripsi'     => $data['deskripsi'],
-                        'prodi_id' => $data['prodi_id'],
+                        'prodi_id' => auth()->user()->prodi_id,
                     ]);
                     DB::commit();
 
@@ -722,19 +722,10 @@ class AdminProdiService
                     DB::beginTransaction();
                     $cpmk = CPMK::with('prodi')->findOrFail($data['cpmk_id']);
 
-                    // Ambil prodi_id dari request atau gunakan yang sudah ada
-                    $prodiId = $data['prodi_id'] ?? $cpmk->prodi->prodi_id;
-
-                    // Pastikan prodi yang dikirimkan ada dalam database sebelum update
-                    if (!Prodi::where('prodi_id', $prodiId)->exists()) {
-                        return ['message' => 'Prodi yang diberikan tidak valid atau tidak ditemukan.'];
-                    }
-
                     $cpmk->update([
                         'kode_cpmk'     => $data['kode_cpmk']     ?? $cpmk->kode_cpmk,
                         'nama_cpmk'     => $data['nama_cpmk']     ?? $cpmk->nama_cpmk,
                         'deskripsi'     => $data['deskripsi']     ?? $cpmk->deskripsi,
-                        'prodi_id' => $prodiId
                     ]);
                     $cpmk = $cpmk->fresh('prodi');
 
