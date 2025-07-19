@@ -134,7 +134,10 @@ class AdminUniversitasService
             switch ($action) {
                 case 'view':
                     if (isset($data['id'])) {
-                        $user = User::role('Admin Universitas')->findOrFail($data['id']);
+                        $user = User::role('Admin Universitas')
+                            ->with('prodi')
+                            ->select('id', 'name', 'email', 'nip')
+                            ->findOrFail($data['id']);
                         return [
                             'data'    => $user,
                             'message' => 'Data akun Admin Universitas berhasil diambil.'
