@@ -47,7 +47,7 @@ class CplRequest extends FormRequest
                 ],
                 'nama_cpl'  => 'required|string|max:50',
                 'deskripsi' => 'required|string|max:500',
-                'prodi_id' => 'sometimes|exists:prodi,prodi_id',
+                'prodi_id' => 'exists:prodi,prodi_id',
             ];
         }
 
@@ -61,7 +61,7 @@ class CplRequest extends FormRequest
             'kode_cpl'  => 'required|string|max:10|unique:cpl,kode_cpl',
             'nama_cpl'  => 'required|string|max:50',
             'deskripsi' => 'required|string|max:500',
-            'prodi_id' => 'required|exists:prodi,prodi_id',
+            'prodi_id' => 'exists:prodi,prodi_id',
         ];
     }
 
@@ -85,7 +85,6 @@ class CplRequest extends FormRequest
             'deskripsi.required' => 'Deskripsi CPL wajib diisi.',
             'deskripsi.string' => 'Deskripsi CPL harus berupa teks.',
             'deskripsi.max' => 'Deskripsi CPL maksimal terdiri dari 500 karakter.',
-            'prodi_id.required' => 'Program studi wajib diisi.',
             'prodi_id.exists' => 'Program studi tidak ditemukan.',
         ];
     }

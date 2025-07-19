@@ -44,9 +44,8 @@ class DataCplTest extends TestCase
         $this->permission = Permission::firstOrCreate(['name' => 'Mengelola data CPL', 'guard_name' => 'web']);
 
         // Buat user acting (Admin Prodi) dan berikan role serta permission
-        $this->user = User::factory()->create([
-            'prodi_id' => $this->prodi->prodi_id
-        ]);
+        $this->user = User::factory()->create();
+        $this->user->prodi_id = $this->prodi->prodi_id;
         $this->user->assignRole($this->adminProdiRole);
         $this->adminProdiRole->givePermissionTo($this->permission);
     }
@@ -60,14 +59,14 @@ class DataCplTest extends TestCase
             'kode_cpl' => 'CPL444',
             'nama_cpl' => 'Nama1 CPL',
             'deskripsi' => 'Deskripsi1 CPL',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         Cpl::factory()->create([
             'kode_cpl' => 'CPL555',
             'nama_cpl' => 'Nama2 CPL',
             'deskripsi' => 'Deskripsi2 CPL',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $payload = ['action' => 'view'];
@@ -94,7 +93,7 @@ class DataCplTest extends TestCase
             'kode_cpl' => 'CPL999',
             'nama_cpl' => 'Nama CPL',
             'deskripsi' => 'Deskripsi CPL',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $payload = [
@@ -125,7 +124,7 @@ class DataCplTest extends TestCase
             'kode_cpl' => 'CPL999',
             'nama_cpl' => 'Store CPL',
             'deskripsi' => 'Deskripsi Store CPL',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ];
 
         $response = $this->actingAs($this->user)
@@ -138,7 +137,7 @@ class DataCplTest extends TestCase
 
         $this->assertDatabaseHas('cpl', [
             'kode_cpl' => 'CPL999',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
     }
 
@@ -171,11 +170,8 @@ class DataCplTest extends TestCase
             'kode_cpl' => 'CPL000',
             'nama_cpl' => 'Update CPL',
             'deskripsi' => 'Deskripsi Update CPL',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
-
-        // Jika ingin update ke prodi yang berbeda, buat terlebih dahulu record prodi baru
-        $newProdi = Prodi::factory()->create(['nama_prodi' => 'Sistem Informasi']);
 
         $updatePayload = [
             'action' => 'update',
@@ -183,7 +179,6 @@ class DataCplTest extends TestCase
             'kode_cpl' => 'CPL888',
             'nama_cpl' => 'Updated CPL',
             'deskripsi' => 'Deskripsi Updated CPL',
-            'prodi_id' => $newProdi->prodi_id,
         ];
 
         $response = $this->actingAs($this->user)
@@ -199,7 +194,6 @@ class DataCplTest extends TestCase
             'kode_cpl' => 'CPL888',
             'nama_cpl' => 'Updated CPL',
             'deskripsi' => 'Deskripsi Updated CPL',
-            'prodi_id' => $newProdi->prodi_id,
         ]);
     }
 
@@ -212,7 +206,7 @@ class DataCplTest extends TestCase
             'kode_cpl' => 'CPL111',
             'nama_cpl' => 'Update gagal CPL',
             'deskripsi' => 'Deskripsi Update gagal CPL',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $invalidPayload = [
@@ -240,7 +234,7 @@ class DataCplTest extends TestCase
             'kode_cpl' => 'CPL222',
             'nama_cpl' => 'Delete CPL',
             'deskripsi' => 'Deskripsi Delete CPL',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $payload = [

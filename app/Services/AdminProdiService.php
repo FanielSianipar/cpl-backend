@@ -606,7 +606,7 @@ class AdminProdiService
                         'kode_cpl'      => $data['kode_cpl'],
                         'nama_cpl'     => $data['nama_cpl'],
                         'deskripsi'     => $data['deskripsi'],
-                        'prodi_id' => $data['prodi_id'],
+                        'prodi_id' => auth()->user()->prodi_id,
                     ]);
                     DB::commit();
 
@@ -625,19 +625,10 @@ class AdminProdiService
                     DB::beginTransaction();
                     $cpl = CPL::with('prodi')->findOrFail($data['cpl_id']);
 
-                    // Ambil prodi_id dari request atau gunakan yang sudah ada
-                    $prodiId = $data['prodi_id'] ?? $cpl->prodi->prodi_id;
-
-                    // Pastikan prodi yang dikirimkan ada dalam database sebelum update
-                    if (!Prodi::where('prodi_id', $prodiId)->exists()) {
-                        return ['message' => 'Prodi yang diberikan tidak valid atau tidak ditemukan.'];
-                    }
-
                     $cpl->update([
                         'kode_cpl'     => $data['kode_cpl']     ?? $cpl->kode_cpl,
                         'nama_cpl'     => $data['nama_cpl']     ?? $cpl->nama_cpl,
                         'deskripsi'     => $data['deskripsi']     ?? $cpl->deskripsi,
-                        'prodi_id' => $prodiId
                     ]);
                     $cpl = $cpl->fresh('prodi');
 
