@@ -2,15 +2,30 @@
 
 namespace App\Services;
 
+use App\Models\Fakultas;
 use App\Models\Prodi;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Exception;
 
 class AdminUniversitasService
 {
+    // Data Fakultas
+    public function dataFakultas(): array
+    {
+        try {
+            // Ambil data fakultas dari model Fakultas
+            $fakultas = Fakultas::select('fakultas_id', 'kode_fakultas', 'nama_fakultas')->get();
+            return [
+                'data'    => $fakultas,
+                'message' => 'Data fakultas berhasil diambil.'
+            ];
+        } catch (Exception $e) {
+            throw new Exception('Gagal mengambil data fakultas: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Kelola data prodi melalui model User.
      * Operasi yang didukung: view, store, update, dan delete.

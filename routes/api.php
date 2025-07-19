@@ -22,6 +22,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Admin Universitas
     // Kelola data prodi
     Route::middleware(['role:Admin Universitas', 'permission:Mengelola data prodi'])->group(function () {
+        Route::get('/data-fakultas', [AdminUniversitasController::class, 'dataFakultas']);
         Route::post('/kelola-data-prodi', [AdminUniversitasController::class, 'kelolaDataProdi']);
         Route::get('/kelola-data-prodi', [AdminUniversitasController::class, 'kelolaDataProdi']);
         Route::put('/kelola-data-prodi', [AdminUniversitasController::class, 'kelolaDataProdi']);

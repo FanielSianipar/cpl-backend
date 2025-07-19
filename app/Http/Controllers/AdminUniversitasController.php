@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProdiRequest;
 use App\Http\Requests\StoreAkunRequest;
 use App\Services\AdminUniversitasService;
+use Illuminate\Http\JsonResponse;
 
 class AdminUniversitasController extends Controller
 {
@@ -18,6 +19,18 @@ class AdminUniversitasController extends Controller
     public function __construct(AdminUniversitasService $adminUniversitasService)
     {
         $this->adminUniversitasService = $adminUniversitasService;
+    }
+
+    /**
+     * Tampilkan keseluruhan data Fakultas.
+     *
+     * @return JsonResponse
+     */
+    public function dataFakultas(): JsonResponse
+    {
+        $result = $this->adminUniversitasService->dataFakultas();
+
+        return response()->json($result, 200);
     }
 
     /**
