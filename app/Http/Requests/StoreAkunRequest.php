@@ -61,6 +61,7 @@ class StoreAkunRequest extends FormRequest
             $rules = array_merge($rules, [
                 'name'     => ['required', 'string', 'min:1', 'max:255'],
                 'email'    => ['required', 'email', 'unique:users,email'],
+                'nip'      => ['required', 'string', 'max:25', 'unique:users,nip'],
                 'password' => ['required', 'string', 'min:8'],
                 'prodi_id' => 'exists:prodi,prodi_id',
             ]);
@@ -75,6 +76,12 @@ class StoreAkunRequest extends FormRequest
                     'required',
                     'email',
                     Rule::unique('users', 'email')->ignore($this->id),
+                ],
+                'nip'      => [
+                    'sometimes',
+                    'string',
+                    'max:25',
+                    Rule::unique('users', 'nip')->ignore($this->id),
                 ],
                 'password' => ['nullable', 'string', 'min:8'],
                 'prodi_id' => 'exists:prodi,prodi_id',
@@ -100,6 +107,9 @@ class StoreAkunRequest extends FormRequest
             'email.required'      => 'Email wajib diisi.',
             'email.email'         => 'Format email tidak valid.',
             'email.unique'        => 'Email sudah digunakan, silakan pilih email lain.',
+            'nip.required'        => 'NIP wajib diisi.',
+            'nip.max'             => 'NIP maksimal 25 karakter.',
+            'nip.unique'          => 'NIP sudah digunakan oleh akun lain.',
             'password.required'   => 'Password wajib diisi.',
             'password.min'        => 'Password minimal harus 8 karakter.',
             'password.confirmed'  => 'Konfirmasi password tidak sesuai.',

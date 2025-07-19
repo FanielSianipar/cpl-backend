@@ -28,6 +28,7 @@ class User extends Authenticatable
         'prodi_id',
         'name',
         'email',
+        'nip',
         'email_verified_at',
         'password',
         'remember_token',

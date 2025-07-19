@@ -143,7 +143,7 @@ class AdminUniversitasService
                         $users = User::role('Admin Universitas')
                             ->where('id', '!=', auth()->id())
                             ->with('prodi')
-                            ->select('id', 'name', 'email')
+                            ->select('id', 'name', 'email', 'nip')
                             ->get();
                         return [
                             'data'    => $users,
@@ -159,6 +159,7 @@ class AdminUniversitasService
                     $user = User::create([
                         'name'     => $data['name'],
                         'email'    => $data['email'],
+                        'nip'      => $data['nip'],
                         'password' => bcrypt($data['password']),
                         'remember_token' => Str::random(10),
                     ]);
@@ -185,6 +186,7 @@ class AdminUniversitasService
                     $user->update([
                         'name'     => $data['name']  ?? $user->name,
                         'email'    => $data['email'] ?? $user->email,
+                        'nip'      => $data['nip']   ?? $user->nip,
                         'password' => isset($data['password']) ? bcrypt($data['password']) : $user->password,
                     ]);
 

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('prodi_id')->nullable();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('nip', 25);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

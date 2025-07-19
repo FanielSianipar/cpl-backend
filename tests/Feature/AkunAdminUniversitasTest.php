@@ -35,13 +35,15 @@ class AkunAdminUniversitasTest extends TestCase
         // Buat beberapa akun Admin Universitas di database.
         $admin1 = User::factory()->create([
             'name'  => 'Admin Universitas 1',
-            'email' => 'admin1@example.com'
+            'email' => 'admin1@example.com',
+            'nip'   => '1234567890123456',
         ]);
         $admin1->assignRole($this->role);
 
         $admin2 = User::factory()->create([
             'name'  => 'Admin Universitas 2',
-            'email' => 'admin2@example.com'
+            'email' => 'admin2@example.com',
+            'nip'   => '1234567890123456',
         ]);
         $admin2->assignRole($this->role);
 
@@ -72,6 +74,7 @@ class AkunAdminUniversitasTest extends TestCase
         $admin = User::factory()->create([
             'name'  => 'Admin Universitas Detail',
             'email' => 'detail@example.com',
+            'nip'   => '1234567890123457',
         ]);
         $admin->assignRole($this->role);
 
@@ -91,6 +94,7 @@ class AkunAdminUniversitasTest extends TestCase
         $data = $response->json('data');
         $this->assertEquals($admin->id, $data['id']);
         $this->assertEquals($admin->email, $data['email']);
+        $this->assertEquals($admin->nip, $data['nip']);
     }
 
     public function test_store_akun_admin_universitas_berhasil(): void
@@ -99,6 +103,7 @@ class AkunAdminUniversitasTest extends TestCase
             'action'   => 'store',
             'name'     => 'Admin Universitas 1',
             'email'    => 'admin1@example.com',
+            'nip'      => '1234567890123458',
             'password' => 'password123',
         ];
 
@@ -111,7 +116,8 @@ class AkunAdminUniversitasTest extends TestCase
             ]);
 
         $this->assertDatabaseHas('users', [
-            'email' => 'admin1@example.com'
+            'email' => 'admin1@example.com',
+            'nip'   => '1234567890123458',
         ]);
     }
 
@@ -121,6 +127,7 @@ class AkunAdminUniversitasTest extends TestCase
             'action'   => 'store',
             'name'     => '', // Nama kosong harusnya gagal
             'email'    => 'invalid-email', // Format email salah
+            'nip'      => '', // NIP kosong harusnya gagal
             'password' => 'short', // Password terlalu pendek
         ];
 
@@ -128,7 +135,7 @@ class AkunAdminUniversitasTest extends TestCase
             ->postJson('/api/kelola-akun-admin-universitas', $payload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['name', 'email', 'password']);
+            ->assertJsonValidationErrors(['name', 'email', 'nip', 'password']);
     }
 
     public function test_update_akun_admin_universitas_berhasil(): void
@@ -137,6 +144,7 @@ class AkunAdminUniversitasTest extends TestCase
         $admin = User::factory()->create([
             'name'  => 'Admin Old Name',
             'email' => 'adminold@example.com',
+            'nip'   => '1234567890123456',
         ]);
         $admin->assignRole($this->role);
 
@@ -145,6 +153,7 @@ class AkunAdminUniversitasTest extends TestCase
             'id'       => $admin->id,
             'name'     => 'Admin New Name',
             'email'    => 'adminnew@example.com',
+            'nip'      => '1234567890123456',
             'password' => 'newpassword123',
         ];
 
@@ -160,6 +169,7 @@ class AkunAdminUniversitasTest extends TestCase
             'id'    => $admin->id,
             'name'  => 'Admin New Name',
             'email' => 'adminnew@example.com',
+            'nip'   => '1234567890123456',
         ]);
     }
 
@@ -169,6 +179,7 @@ class AkunAdminUniversitasTest extends TestCase
         $admin = User::factory()->create([
             'name'  => 'Admin Existing',
             'email' => 'existingadmin@example.com',
+            'nip'   => '1234567890123456',
         ]);
         $admin->assignRole($this->role);
 
@@ -177,6 +188,7 @@ class AkunAdminUniversitasTest extends TestCase
             'id'       => $admin->id,
             'name'     => '', // Nama kosong
             'email'    => 'not-an-email', // Format email salah
+            'nip'      => '', // NIP kosong
             'password' => 'short', // Password terlalu pendek
         ];
 
@@ -184,7 +196,7 @@ class AkunAdminUniversitasTest extends TestCase
             ->postJson('/api/kelola-akun-admin-universitas', $invalidPayload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['name', 'email', 'password']);
+            ->assertJsonValidationErrors(['name', 'email', 'nip', 'password']);
     }
 
     public function test_delete_akun_admin_universitas_berhasil(): void
@@ -193,6 +205,7 @@ class AkunAdminUniversitasTest extends TestCase
         $admin = User::factory()->create([
             'name'  => 'Test Admin',
             'email' => 'testadmin@example.com',
+            'nip'   => '12345678901234591',
         ]);
         $admin->assignRole($this->role);
 
@@ -212,6 +225,7 @@ class AkunAdminUniversitasTest extends TestCase
         $this->assertDatabaseMissing('users', [
             'id'    => $admin->id,
             'email' => $admin->email,
+            'nip'   => $admin->nip,
         ]);
     }
 }
