@@ -35,13 +35,14 @@ class AkunDosenTest extends TestCase
         // Buat permission untuk mengelola akun Dosen
         $this->permission = Permission::firstOrCreate(['name' => 'Mengelola akun dosen', 'guard_name' => 'web']);
 
-        // Buat user acting (Admin Prodi) dan berikan role serta permission
-        $this->user = User::factory()->create();
-        $this->user->assignRole($this->adminProdiRole);
-        $this->adminProdiRole->givePermissionTo($this->permission);
-
         // Buat satu record Prodi untuk keperluan testing
         $this->prodi = Prodi::factory()->create(['nama_prodi' => 'Teknik Informatika']);
+
+        // Buat user acting (Admin Prodi) dan berikan role serta permission
+        $this->user = User::factory()->create();
+        $this->user->prodi_id = $this->prodi->prodi_id;
+        $this->user->assignRole($this->adminProdiRole);
+        $this->adminProdiRole->givePermissionTo($this->permission);
     }
 
     /**
@@ -52,14 +53,14 @@ class AkunDosenTest extends TestCase
         $dosen1 = User::factory()->create([
             'name'     => 'Dosen 1',
             'email'    => 'dosen1@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
         $dosen1->assignRole($this->dosenRole);
 
         $dosen2 = User::factory()->create([
             'name'     => 'Dosen 2',
             'email'    => 'dosen2@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
         $dosen2->assignRole($this->dosenRole);
 
@@ -90,7 +91,7 @@ class AkunDosenTest extends TestCase
         $dosen = User::factory()->create([
             'name'     => 'Dosen Detail',
             'email'    => 'dosen_detail@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
         $dosen->assignRole($this->dosenRole);
 
@@ -107,7 +108,7 @@ class AkunDosenTest extends TestCase
         $data = $response->json('data');
         $this->assertEquals($dosen->id, $data['id']);
         $this->assertEquals($dosen->email, $data['email']);
-        $this->assertEquals($this->prodi->prodi_id, $data['prodi_id']);
+        $this->assertEquals($this->user->prodi_id, $data['prodi_id']);
     }
 
     /**
@@ -120,7 +121,7 @@ class AkunDosenTest extends TestCase
             'name'     => 'Dosen Baru',
             'email'    => 'dosen_baru@example.com',
             'password' => 'password123',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ];
 
         $response = $this->actingAs($this->user)
@@ -133,7 +134,7 @@ class AkunDosenTest extends TestCase
 
         $this->assertDatabaseHas('users', [
             'email'    => 'dosen_baru@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $createdUser = User::where('email', 'dosen_baru@example.com')->first();
@@ -169,12 +170,9 @@ class AkunDosenTest extends TestCase
         $dosen = User::factory()->create([
             'name'     => 'Dosen Lama',
             'email'    => 'dosen_lama@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
         $dosen->assignRole($this->dosenRole);
-
-        // Jika ingin update ke prodi yang berbeda, buat terlebih dahulu record prodi baru
-        $newProdi = Prodi::factory()->create(['nama_prodi' => 'Sistem Informasi']);
 
         $updatePayload = [
             'action'   => 'update',
@@ -182,7 +180,6 @@ class AkunDosenTest extends TestCase
             'name'     => 'Dosen Baru',
             'email'    => 'dosen_baru_updated@example.com',
             'password' => 'newpassword123',
-            'prodi_id' => $newProdi->prodi_id,
         ];
 
         $response = $this->actingAs($this->user)
@@ -197,7 +194,6 @@ class AkunDosenTest extends TestCase
             'id'       => $dosen->id,
             'name'     => 'Dosen Baru',
             'email'    => 'dosen_baru_updated@example.com',
-            'prodi_id' => $newProdi->prodi_id,
         ]);
     }
 
@@ -210,7 +206,7 @@ class AkunDosenTest extends TestCase
         $dosen = User::factory()->create([
             'name'     => 'Dosen Existing',
             'email'    => 'dosen_existing@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
         $dosen->assignRole($this->dosenRole);
 
@@ -238,7 +234,7 @@ class AkunDosenTest extends TestCase
         $dosen = User::factory()->create([
             'name'     => 'Dosen Delete',
             'email'    => 'dosen_delete@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
         $dosen->assignRole($this->dosenRole);
 
