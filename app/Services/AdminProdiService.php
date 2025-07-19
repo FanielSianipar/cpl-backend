@@ -69,7 +69,7 @@ class AdminProdiService
                         'email'          => $data['email'],
                         'password'       => bcrypt($data['password']),
                         'remember_token' => Str::random(10),
-                        'prodi_id'       => $data['prodi_id'], // Tambahkan prodi_id
+                        'prodi_id'       => auth()->user()->prodi_id,
                     ]);
 
                     // Assign role "Kaprodi"
@@ -96,7 +96,6 @@ class AdminProdiService
                         'name'     => $data['name'] ?? $user->name,
                         'email'    => $data['email'] ?? $user->email,
                         'password' => isset($data['password']) ? bcrypt($data['password']) : $user->password,
-                        'prodi_id' => $data['prodi_id'] ?? $user->prodi_id, // Update jika diberikan
                     ]);
 
                     DB::commit();

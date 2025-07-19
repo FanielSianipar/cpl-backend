@@ -62,12 +62,7 @@ class StoreAkunRequest extends FormRequest
                 'name'     => ['required', 'string', 'min:1', 'max:255'],
                 'email'    => ['required', 'email', 'unique:users,email'],
                 'password' => ['required', 'string', 'min:8'],
-                // Jika bukan Admin Universitas, prodi_id wajib diisi; untuk Admin Universitas, nullable.
-                'prodi_id' => [
-                    $isAdminUniversitas ? 'nullable' : 'required',
-                    'integer',
-                    'exists:prodi,prodi_id',
-                ],
+                'prodi_id' => 'exists:prodi,prodi_id',
             ]);
         }
 
@@ -82,12 +77,7 @@ class StoreAkunRequest extends FormRequest
                     Rule::unique('users', 'email')->ignore($this->id),
                 ],
                 'password' => ['nullable', 'string', 'min:8'],
-                'prodi_id' => [
-                    $isAdminUniversitas ? 'nullable' : 'required',
-                    'sometimes',
-                    'integer',
-                    'exists:prodi,prodi_id',
-                ],
+                'prodi_id' => 'exists:prodi,prodi_id',
             ]);
         }
 
@@ -113,9 +103,7 @@ class StoreAkunRequest extends FormRequest
             'password.required'   => 'Password wajib diisi.',
             'password.min'        => 'Password minimal harus 8 karakter.',
             'password.confirmed'  => 'Konfirmasi password tidak sesuai.',
-            'prodi_id.required'   => 'Prodi wajib diisi jika bukan Admin Universitas.',
-            'prodi_id.integer'    => 'Prodi harus berupa angka.',
-            'prodi_id.exists'     => 'Prodi tidak ditemukan.',
+            'prodi_id.exists'     => 'Program studi tidak ditemukan.',
         ];
     }
 }

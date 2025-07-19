@@ -35,13 +35,14 @@ class AkunKaprodiTest extends TestCase
         // Buat permission untuk mengelola akun Kaprodi
         $this->permission = Permission::firstOrCreate(['name' => 'Mengelola akun kaprodi', 'guard_name' => 'web']);
 
-        // Buat user acting (Admin Prodi) dan berikan role serta permission
-        $this->user = User::factory()->create();
-        $this->user->assignRole($this->adminProdiRole);
-        $this->adminProdiRole->givePermissionTo($this->permission);
-
         // Buat satu record Prodi untuk keperluan testing
         $this->prodi = Prodi::factory()->create(['nama_prodi' => 'Teknik Informatika']);
+
+        // Buat user acting (Admin Prodi) dan berikan role serta permission
+        $this->user = User::factory()->create();
+        $this->user->prodi_id = $this->prodi->prodi_id;
+        $this->user->assignRole($this->adminProdiRole);
+        $this->adminProdiRole->givePermissionTo($this->permission);
     }
 
     /**
@@ -52,14 +53,14 @@ class AkunKaprodiTest extends TestCase
         $kaprodi1 = User::factory()->create([
             'name'     => 'Kaprodi 1',
             'email'    => 'kaprodi1@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
         $kaprodi1->assignRole($this->kaprodiRole);
 
         $kaprodi2 = User::factory()->create([
             'name'     => 'Kaprodi 2',
             'email'    => 'kaprodi2@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
         $kaprodi2->assignRole($this->kaprodiRole);
 
@@ -90,7 +91,7 @@ class AkunKaprodiTest extends TestCase
         $kaprodi = User::factory()->create([
             'name'     => 'Kaprodi Detail',
             'email'    => 'kaprodi_detail@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
         $kaprodi->assignRole($this->kaprodiRole);
 
@@ -107,7 +108,7 @@ class AkunKaprodiTest extends TestCase
         $data = $response->json('data');
         $this->assertEquals($kaprodi->id, $data['id']);
         $this->assertEquals($kaprodi->email, $data['email']);
-        $this->assertEquals($this->prodi->prodi_id, $data['prodi_id']);
+        $this->assertEquals($this->user->prodi_id, $data['prodi_id']);
     }
 
     /**
@@ -120,7 +121,7 @@ class AkunKaprodiTest extends TestCase
             'name'     => 'Kaprodi Baru',
             'email'    => 'kaprodi_baru@example.com',
             'password' => 'password123',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ];
 
         $response = $this->actingAs($this->user)
@@ -133,7 +134,7 @@ class AkunKaprodiTest extends TestCase
 
         $this->assertDatabaseHas('users', [
             'email'    => 'kaprodi_baru@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $createdUser = User::where('email', 'kaprodi_baru@example.com')->first();
@@ -169,7 +170,7 @@ class AkunKaprodiTest extends TestCase
         $kaprodi = User::factory()->create([
             'name'     => 'Kaprodi Lama',
             'email'    => 'kaprodi_lama@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
         $kaprodi->assignRole($this->kaprodiRole);
 
@@ -210,7 +211,7 @@ class AkunKaprodiTest extends TestCase
         $kaprodi = User::factory()->create([
             'name'     => 'Kaprodi Existing',
             'email'    => 'kaprodi_existing@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
         $kaprodi->assignRole($this->kaprodiRole);
 
@@ -238,7 +239,7 @@ class AkunKaprodiTest extends TestCase
         $kaprodi = User::factory()->create([
             'name'     => 'Kaprodi Delete',
             'email'    => 'kaprodi_delete@example.com',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
         $kaprodi->assignRole($this->kaprodiRole);
 
