@@ -246,6 +246,8 @@ class AdminUniversitasService
                     if (isset($data['id'])) {
                         $user = User::role('Admin Prodi')
                             ->with('prodi')
+                            ->with('prodi.fakultas')
+                            ->select('id', 'name', 'email', 'nip', 'prodi_id')
                             ->findOrFail($data['id']);
                         return [
                             'data'    => $user,
@@ -255,7 +257,8 @@ class AdminUniversitasService
                         $users = User::role('Admin Prodi')
                             ->where('id', '!=', auth()->id())
                             ->with('prodi')
-                            ->select('id', 'name', 'email', 'prodi_id')
+                            ->with('prodi.fakultas')
+                            ->select('id', 'name', 'email', 'nip', 'prodi_id')
                             ->get();
                         return [
                             'data'    => $users,
@@ -271,6 +274,7 @@ class AdminUniversitasService
                     $user = User::create([
                         'name'           => $data['name'],
                         'email'          => $data['email'],
+                        'nip'            => $data['nip'],
                         'password'       => bcrypt($data['password']),
                         'remember_token' => Str::random(10),
                         'prodi_id'       => $data['prodi_id'],
@@ -298,6 +302,7 @@ class AdminUniversitasService
                     $user->update([
                         'name'     => $data['name'] ?? $user->name,
                         'email'    => $data['email'] ?? $user->email,
+                        'nip'      => $data['nip'] ?? $user->nip,
                         'password' => isset($data['password']) ? bcrypt($data['password']) : $user->password,
                         'prodi_id' => $data['prodi_id'] ?? $user->prodi_id, // update jika diberikan
                     ]);
