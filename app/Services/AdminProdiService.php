@@ -380,7 +380,7 @@ class AdminProdiService
                     $mataKuliah = MataKuliah::create([
                         'kode_mata_kuliah'      => $data['kode_mata_kuliah'],
                         'nama_mata_kuliah'     => $data['nama_mata_kuliah'],
-                        'prodi_id' => $data['prodi_id'],
+                        'prodi_id' => auth()->user()->prodi_id,
                     ]);
                     DB::commit();
 
@@ -399,18 +399,9 @@ class AdminProdiService
                     DB::beginTransaction();
                     $mataKuliah = MataKuliah::with('prodi')->findOrFail($data['mata_kuliah_id']);
 
-                    // Ambil prodi_id dari request atau gunakan yang sudah ada
-                    $prodiId = $data['prodi_id'] ?? $mataKuliah->prodi->prodi_id;
-
-                    // Pastikan prodi yang dikirimkan ada dalam database sebelum update
-                    if (!Prodi::where('prodi_id', $prodiId)->exists()) {
-                        return ['message' => 'Prodi yang diberikan tidak valid atau tidak ditemukan.'];
-                    }
-
                     $mataKuliah->update([
                         'kode_mata_kuliah'     => $data['kode_mata_kuliah']     ?? $mataKuliah->kode_mata_kuliah,
                         'nama_mata_kuliah'     => $data['nama_mata_kuliah']     ?? $mataKuliah->nama_mata_kuliah,
-                        'prodi_id' => $prodiId
                     ]);
                     $mataKuliah = $mataKuliah->fresh('prodi');
 

@@ -44,9 +44,8 @@ class DataMataKuliahTest extends TestCase
         $this->permission = Permission::firstOrCreate(['name' => 'Mengelola data mata kuliah', 'guard_name' => 'web']);
 
         // Buat user acting (Admin Prodi) dan berikan role serta permission
-        $this->user = User::factory()->create([
-            'prodi_id' => $this->prodi->prodi_id
-        ]);
+        $this->user = User::factory()->create();
+        $this->user->prodi_id = $this->prodi->prodi_id;
         $this->user->assignRole($this->adminProdiRole);
         $this->adminProdiRole->givePermissionTo($this->permission);
     }
@@ -59,13 +58,13 @@ class DataMataKuliahTest extends TestCase
         MataKuliah::factory()->create([
             'kode_mata_kuliah' => 'MK444',
             'nama_mata_kuliah' => 'Nama1 Mata Kuliah',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         MataKuliah::factory()->create([
             'kode_mata_kuliah' => 'MK555',
             'nama_mata_kuliah' => 'Nama2 Mata Kuliah',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $payload = ['action' => 'view'];
@@ -91,7 +90,7 @@ class DataMataKuliahTest extends TestCase
         $mataKuliah = MataKuliah::factory()->create([
             'kode_mata_kuliah' => 'MK999',
             'nama_mata_kuliah' => 'Nama Mata Kuliah',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $payload = [
@@ -121,7 +120,7 @@ class DataMataKuliahTest extends TestCase
             'action' => 'store',
             'kode_mata_kuliah' => 'MK999',
             'nama_mata_kuliah' => 'Store Mata Kuliah',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ];
 
         $response = $this->actingAs($this->user)
@@ -134,7 +133,7 @@ class DataMataKuliahTest extends TestCase
 
         $this->assertDatabaseHas('mata_kuliah', [
             'kode_mata_kuliah' => 'MK999',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
     }
 
@@ -165,18 +164,14 @@ class DataMataKuliahTest extends TestCase
         $mataKuliah = MataKuliah::factory()->create([
             'kode_mata_kuliah' => 'MK000',
             'nama_mata_kuliah' => 'Update Mata Kuliah',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
-
-        // Jika ingin update ke prodi yang berbeda, buat terlebih dahulu record prodi baru
-        $newProdi = Prodi::factory()->create(['nama_prodi' => 'Sistem Informasi']);
 
         $updatePayload = [
             'action' => 'update',
             'mata_kuliah_id' => $mataKuliah->mata_kuliah_id,
             'kode_mata_kuliah' => 'MK888',
             'nama_mata_kuliah' => 'Updated Mata Kuliah',
-            'prodi_id' => $newProdi->prodi_id,
         ];
 
         $response = $this->actingAs($this->user)
@@ -191,7 +186,6 @@ class DataMataKuliahTest extends TestCase
             'mata_kuliah_id' => $mataKuliah->mata_kuliah_id,
             'kode_mata_kuliah' => 'MK888',
             'nama_mata_kuliah' => 'Updated Mata Kuliah',
-            'prodi_id' => $newProdi->prodi_id,
         ]);
     }
 
@@ -203,7 +197,7 @@ class DataMataKuliahTest extends TestCase
         $mataKuliah = MataKuliah::factory()->create([
             'kode_mata_kuliah' => 'MK111',
             'nama_mata_kuliah' => 'Update gagal Mata Kuliah',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $invalidPayload = [
@@ -229,7 +223,7 @@ class DataMataKuliahTest extends TestCase
         $mataKuliah = MataKuliah::factory()->create([
             'kode_mata_kuliah' => 'MK222',
             'nama_mata_kuliah' => 'Delete Mata Kuliah',
-            'prodi_id' => $this->prodi->prodi_id,
+            'prodi_id' => $this->user->prodi_id,
         ]);
 
         $payload = [

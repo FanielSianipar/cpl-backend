@@ -46,7 +46,7 @@ class MataKuliahRequest extends FormRequest
                     Rule::unique('mata_kuliah', 'kode_mata_kuliah')->ignore($this->input('mata_kuliah_id'), 'mata_kuliah_id')
                 ],
                 'nama_mata_kuliah'  => 'required|string|max:50',
-                'prodi_id' => 'sometimes|exists:prodi,prodi_id',
+                'prodi_id' => 'exists:prodi,prodi_id',
             ];
         }
 
@@ -59,7 +59,7 @@ class MataKuliahRequest extends FormRequest
         return [
             'kode_mata_kuliah'  => 'required|string|max:10|unique:mata_kuliah,kode_mata_kuliah',
             'nama_mata_kuliah'  => 'required|string|max:50',
-            'prodi_id' => 'required|exists:prodi,prodi_id',
+            'prodi_id' => 'exists:prodi,prodi_id',
         ];
     }
 
@@ -80,7 +80,6 @@ class MataKuliahRequest extends FormRequest
             'nama_mata_kuliah.required' => 'Nama mata kuliah wajib diisi.',
             'nama_mata_kuliah.string' => 'Nama mata kuliah harus berupa teks.',
             'nama_mata_kuliah.max' => 'Nama mata kuliah maksimal terdiri dari 50 karakter.',
-            'prodi_id.required' => 'Program studi wajib diisi.',
             'prodi_id.exists' => 'Program studi tidak ditemukan.',
         ];
     }
