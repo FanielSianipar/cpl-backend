@@ -53,6 +53,7 @@ class AkunDosenTest extends TestCase
         $dosen1 = User::factory()->create([
             'name'     => 'Dosen 1',
             'email'    => 'dosen1@example.com',
+            'nip'      => '1234567890123451',
             'prodi_id' => $this->user->prodi_id,
         ]);
         $dosen1->assignRole($this->dosenRole);
@@ -60,6 +61,7 @@ class AkunDosenTest extends TestCase
         $dosen2 = User::factory()->create([
             'name'     => 'Dosen 2',
             'email'    => 'dosen2@example.com',
+            'nip'      => '1234567890123452',
             'prodi_id' => $this->user->prodi_id,
         ]);
         $dosen2->assignRole($this->dosenRole);
@@ -91,6 +93,7 @@ class AkunDosenTest extends TestCase
         $dosen = User::factory()->create([
             'name'     => 'Dosen Detail',
             'email'    => 'dosen_detail@example.com',
+            'nip'      => '1234567890123453',
             'prodi_id' => $this->user->prodi_id,
         ]);
         $dosen->assignRole($this->dosenRole);
@@ -108,6 +111,7 @@ class AkunDosenTest extends TestCase
         $data = $response->json('data');
         $this->assertEquals($dosen->id, $data['id']);
         $this->assertEquals($dosen->email, $data['email']);
+        $this->assertEquals($dosen->nip, $data['nip']);
         $this->assertEquals($this->user->prodi_id, $data['prodi_id']);
     }
 
@@ -120,6 +124,7 @@ class AkunDosenTest extends TestCase
             'action'   => 'store',
             'name'     => 'Dosen Baru',
             'email'    => 'dosen_baru@example.com',
+            'nip'      => '1234567890123454',
             'password' => 'password123',
             'prodi_id' => $this->user->prodi_id,
         ];
@@ -134,6 +139,7 @@ class AkunDosenTest extends TestCase
 
         $this->assertDatabaseHas('users', [
             'email'    => 'dosen_baru@example.com',
+            'nip'      => '1234567890123454',
             'prodi_id' => $this->user->prodi_id,
         ]);
 
@@ -150,6 +156,7 @@ class AkunDosenTest extends TestCase
             'action'   => 'store',
             'name'     => '',
             'email'    => 'not-an-email',
+            'nip'      => '',
             'password' => 'short',
             'prodi_id' => '',
         ];
@@ -158,7 +165,7 @@ class AkunDosenTest extends TestCase
             ->postJson('/api/kelola-akun-dosen', $payload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['name', 'email', 'password', 'prodi_id']);
+            ->assertJsonValidationErrors(['name', 'email', 'nip', 'password', 'prodi_id']);
     }
 
     /**
@@ -170,6 +177,7 @@ class AkunDosenTest extends TestCase
         $dosen = User::factory()->create([
             'name'     => 'Dosen Lama',
             'email'    => 'dosen_lama@example.com',
+            'nip'      => '1234567890123455',
             'prodi_id' => $this->user->prodi_id,
         ]);
         $dosen->assignRole($this->dosenRole);
@@ -179,6 +187,7 @@ class AkunDosenTest extends TestCase
             'id'       => $dosen->id,
             'name'     => 'Dosen Baru',
             'email'    => 'dosen_baru_updated@example.com',
+            'nip'      => '1234567890123456',
             'password' => 'newpassword123',
         ];
 
@@ -194,6 +203,7 @@ class AkunDosenTest extends TestCase
             'id'       => $dosen->id,
             'name'     => 'Dosen Baru',
             'email'    => 'dosen_baru_updated@example.com',
+            'nip'      => '1234567890123456',
         ]);
     }
 
@@ -206,6 +216,7 @@ class AkunDosenTest extends TestCase
         $dosen = User::factory()->create([
             'name'     => 'Dosen Existing',
             'email'    => 'dosen_existing@example.com',
+            'nip'      => '1234567890123457',
             'prodi_id' => $this->user->prodi_id,
         ]);
         $dosen->assignRole($this->dosenRole);
@@ -215,6 +226,7 @@ class AkunDosenTest extends TestCase
             'id'       => $dosen->id,
             'name'     => '',             // Nama kosong -> invalid
             'email'    => 'not-an-email', // Format email salah
+            'nip'      => '',             // NIP kosong -> invalid
             'password' => 'short',        // Password terlalu pendek
             'prodi_id' => '',             // Prodi_id tidak valid
         ];
@@ -223,7 +235,7 @@ class AkunDosenTest extends TestCase
             ->postJson('/api/kelola-akun-dosen', $invalidPayload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['name', 'email', 'password', 'prodi_id']);
+            ->assertJsonValidationErrors(['name', 'email', 'nip', 'password', 'prodi_id']);
     }
 
     /**
@@ -234,6 +246,7 @@ class AkunDosenTest extends TestCase
         $dosen = User::factory()->create([
             'name'     => 'Dosen Delete',
             'email'    => 'dosen_delete@example.com',
+            'nip'      => '1234567890123458',
             'prodi_id' => $this->user->prodi_id,
         ]);
         $dosen->assignRole($this->dosenRole);
@@ -251,6 +264,7 @@ class AkunDosenTest extends TestCase
         $this->assertDatabaseMissing('users', [
             'id'    => $dosen->id,
             'email' => $dosen->email,
+            'nip'   => $dosen->nip,
         ]);
     }
 }

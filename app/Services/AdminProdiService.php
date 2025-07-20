@@ -149,6 +149,8 @@ class AdminProdiService
                         // Ambil data satu akun Dosen berdasarkan ID
                         $user = User::role('Dosen')
                             ->with('prodi')
+                            ->with('prodi.fakultas')
+                            ->select('id', 'name', 'email', 'nip', 'prodi_id')
                             ->findOrFail($data['id']);
                         return [
                             'data'    => $user,
@@ -158,7 +160,8 @@ class AdminProdiService
                         // Ambil semua akun Dosen
                         $users = User::role('Dosen')
                             ->with('prodi')
-                            ->select('id', 'name', 'email', 'prodi_id')
+                            ->with('prodi.fakultas')
+                            ->select('id', 'name', 'email', 'nip', 'prodi_id')
                             ->get();
                         return [
                             'data'    => $users,
@@ -174,6 +177,7 @@ class AdminProdiService
                     $user = User::create([
                         'name'           => $data['name'],
                         'email'          => $data['email'],
+                        'nip'            => $data['nip'],
                         'password'       => bcrypt($data['password']),
                         'remember_token' => Str::random(10),
                         'prodi_id'       => auth()->user()->prodi_id,
@@ -202,6 +206,7 @@ class AdminProdiService
                     $user->update([
                         'name'     => $data['name'] ?? $user->name,
                         'email'    => $data['email'] ?? $user->email,
+                        'nip'      => $data['nip'] ?? $user->nip,
                         'password' => isset($data['password']) ? bcrypt($data['password']) : $user->password,
                     ]);
 
