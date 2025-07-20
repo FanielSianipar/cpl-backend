@@ -53,6 +53,7 @@ class AkunKaprodiTest extends TestCase
         $kaprodi1 = User::factory()->create([
             'name'     => 'Kaprodi 1',
             'email'    => 'kaprodi1@example.com',
+            'nip'      => '1234567890123451',
             'prodi_id' => $this->user->prodi_id,
         ]);
         $kaprodi1->assignRole($this->kaprodiRole);
@@ -60,6 +61,7 @@ class AkunKaprodiTest extends TestCase
         $kaprodi2 = User::factory()->create([
             'name'     => 'Kaprodi 2',
             'email'    => 'kaprodi2@example.com',
+            'nip'      => '1234567890123452',
             'prodi_id' => $this->user->prodi_id,
         ]);
         $kaprodi2->assignRole($this->kaprodiRole);
@@ -91,6 +93,7 @@ class AkunKaprodiTest extends TestCase
         $kaprodi = User::factory()->create([
             'name'     => 'Kaprodi Detail',
             'email'    => 'kaprodi_detail@example.com',
+            'nip'      => '1234567890123453',
             'prodi_id' => $this->user->prodi_id,
         ]);
         $kaprodi->assignRole($this->kaprodiRole);
@@ -108,6 +111,7 @@ class AkunKaprodiTest extends TestCase
         $data = $response->json('data');
         $this->assertEquals($kaprodi->id, $data['id']);
         $this->assertEquals($kaprodi->email, $data['email']);
+        $this->assertEquals($kaprodi->nip, $data['nip']);
         $this->assertEquals($this->user->prodi_id, $data['prodi_id']);
     }
 
@@ -120,6 +124,7 @@ class AkunKaprodiTest extends TestCase
             'action'   => 'store',
             'name'     => 'Kaprodi Baru',
             'email'    => 'kaprodi_baru@example.com',
+            'nip'      => '1234567890123454',
             'password' => 'password123',
             'prodi_id' => $this->user->prodi_id,
         ];
@@ -134,6 +139,7 @@ class AkunKaprodiTest extends TestCase
 
         $this->assertDatabaseHas('users', [
             'email'    => 'kaprodi_baru@example.com',
+            'nip'      => '1234567890123454',
             'prodi_id' => $this->user->prodi_id,
         ]);
 
@@ -150,6 +156,7 @@ class AkunKaprodiTest extends TestCase
             'action'   => 'store',
             'name'     => '',
             'email'    => 'not-an-email',
+            'nip'      => '',
             'password' => 'short',
             'prodi_id' => '',
         ];
@@ -158,7 +165,7 @@ class AkunKaprodiTest extends TestCase
             ->postJson('/api/kelola-akun-kaprodi', $payload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['name', 'email', 'password', 'prodi_id']);
+            ->assertJsonValidationErrors(['name', 'email','nip', 'password', 'prodi_id']);
     }
 
     /**
@@ -170,20 +177,18 @@ class AkunKaprodiTest extends TestCase
         $kaprodi = User::factory()->create([
             'name'     => 'Kaprodi Lama',
             'email'    => 'kaprodi_lama@example.com',
+            'nip'      => '1234567890123455',
             'prodi_id' => $this->user->prodi_id,
         ]);
         $kaprodi->assignRole($this->kaprodiRole);
-
-        // Jika ingin update ke prodi yang berbeda, buat terlebih dahulu record prodi baru
-        $newProdi = Prodi::factory()->create(['nama_prodi' => 'Sistem Informasi']);
 
         $updatePayload = [
             'action'   => 'update',
             'id'       => $kaprodi->id,
             'name'     => 'Kaprodi Baru',
             'email'    => 'kaprodi_baru_updated@example.com',
+            'nip'      => '1234567890123456',
             'password' => 'newpassword123',
-            'prodi_id' => $newProdi->prodi_id,
         ];
 
         $response = $this->actingAs($this->user)
@@ -198,7 +203,7 @@ class AkunKaprodiTest extends TestCase
             'id'       => $kaprodi->id,
             'name'     => 'Kaprodi Baru',
             'email'    => 'kaprodi_baru_updated@example.com',
-            'prodi_id' => $newProdi->prodi_id,
+            'nip'      => '1234567890123456',
         ]);
     }
 
@@ -211,6 +216,7 @@ class AkunKaprodiTest extends TestCase
         $kaprodi = User::factory()->create([
             'name'     => 'Kaprodi Existing',
             'email'    => 'kaprodi_existing@example.com',
+            'nip'      => '1234567890123457',
             'prodi_id' => $this->user->prodi_id,
         ]);
         $kaprodi->assignRole($this->kaprodiRole);
@@ -220,6 +226,7 @@ class AkunKaprodiTest extends TestCase
             'id'       => $kaprodi->id,
             'name'     => '',             // Nama kosong -> invalid
             'email'    => 'not-an-email', // Format email salah
+            'nip'      => '',             // NIP kosong -> invalid
             'password' => 'short',        // Password terlalu pendek
             'prodi_id' => '',             // Prodi_id tidak valid
         ];
@@ -228,7 +235,7 @@ class AkunKaprodiTest extends TestCase
             ->postJson('/api/kelola-akun-kaprodi', $invalidPayload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['name', 'email', 'password', 'prodi_id']);
+            ->assertJsonValidationErrors(['name', 'email', 'nip', 'password', 'prodi_id']);
     }
 
     /**
@@ -239,6 +246,7 @@ class AkunKaprodiTest extends TestCase
         $kaprodi = User::factory()->create([
             'name'     => 'Kaprodi Delete',
             'email'    => 'kaprodi_delete@example.com',
+            'nip'      => '1234567890123458',
             'prodi_id' => $this->user->prodi_id,
         ]);
         $kaprodi->assignRole($this->kaprodiRole);
@@ -256,6 +264,7 @@ class AkunKaprodiTest extends TestCase
         $this->assertDatabaseMissing('users', [
             'id'    => $kaprodi->id,
             'email' => $kaprodi->email,
+            'nip'   => $kaprodi->nip,
         ]);
     }
 }
