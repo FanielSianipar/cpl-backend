@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Scopes\ProdiScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -29,8 +28,8 @@ class CPMK extends Model
     public function cpls()
     {
         return $this->belongsToMany(
-            Cpl::class,
-            'cpmk_cpl',
+            CPL::class,
+            'cpmk_mata_kuliah',
             'cpmk_id',
             'cpl_id'
         )->withPivot('bobot')

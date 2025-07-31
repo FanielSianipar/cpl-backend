@@ -24,23 +24,30 @@ class PemetaanCpmkRequest extends FormRequest
      */
     public function rules(): array
     {
-        $rules = [
-            'action' => 'required|in:store,update,view,delete',
-            'mata_kuliah_id' => 'required|exists:mata_kuliah,mata_kuliah_id',
-        ];
-
         $action = $this->input('action');
 
+        // Aturan dasar
+        $rules = [
+            'action'           => 'required|in:store,update,view,delete',
+            'mata_kuliah_id'   => 'required|exists:mata_kuliah,mata_kuliah_id',
+        ];
+
+        // Tambahan untuk store & update
         if (in_array($action, ['store', 'update'])) {
-            $rules['cpmks'] = 'required|array|min:1';
-            $rules['cpmks.*.cpmk_id'] = 'required|exists:cpmk,cpmk_id';
-            $rules['cpmks.*.cpl_id'] = 'required|exists:cpl,cpl_id';
-            $rules['cpmks.*.bobot'] = 'required|numeric|min:0|max:100';
-        } elseif ($action === 'delete') {
-            // Untuk delete, kita tidak butuh field bobot
-            $rules['cpmks'] = 'required|array|min:1';
-            $rules['cpmks.*.cpmk_id'] = 'required|exists:cpmk,cpmk_id';
-            $rules['cpmks.*.cpl_id'] = 'required|exists:cpl,cpl_id';
+            $rules['cpmks']              = 'required|array|min:1';
+            $rules['cpmks.*.cpmk_id']    = 'required|exists:cpmk,cpmk_id';
+            $rules['cpmks.*.cpl_id']     = 'required|exists:cpl,cpl_id';
+            $rules['cpmks.*.bobot']      = 'required|numeric|min:0|max:100';
+        }
+        // Tambahan untuk view
+        elseif ($action === 'view') {
+            $rules['mata_kuliah_id'] = 'required';
+        }
+        // Tambahan untuk delete
+        elseif ($action === 'delete') {
+            $rules['cpmks']             = 'required|array|min:1';
+            $rules['cpmks.*.cpmk_id']   = 'required|exists:cpmk,cpmk_id';
+            $rules['cpmks.*.cpl_id']    = 'required|exists:cpl,cpl_id';
         }
 
         return $rules;
@@ -54,23 +61,29 @@ class PemetaanCpmkRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'action.required' => 'Action harus diisi (store, update, view, atau delete).',
-            'action.in' => 'Action yang diberikan tidak valid, pilih salah satu: store, update, view, delete.',
+            'action.required'      => 'Action harus diisi (store, update, view, delete).',
+            'action.in'            => 'Action tidak valid.',
             'mata_kuliah_id.required' => 'ID mata kuliah wajib diisi.',
-            'mata_kuliah_id.exists' => 'Mata kuliah tidak ditemukan.',
+            'mata_kuliah_id.exists'   => 'Mata kuliah tidak ditemukan.',
 
-            'cpmks.required' => 'Data CPMK harus disertakan untuk aksi store atau update.',
-            'cpmks.array' => 'Data CPMK harus berupa array.',
-            'cpmks.min' => 'Minimal satu data CPMK harus disertakan.',
+            // store/update
+            'cpmks.required'           => 'Data CPMK harus disertakan.',
+            'cpmks.array'              => 'Data CPMK harus berupa array.',
+            'cpmks.min'                => 'Minimal satu data CPMK harus disertakan.',
+            'cpmks.*.cpmk_id.required' => 'ID CPMK wajib diisi.',
+            'cpmks.*.cpmk_id.exists'   => 'CPMK tidak ditemukan.',
+            'cpmks.*.cpl_id.required'  => 'ID CPL wajib diisi.',
+            'cpmks.*.cpl_id.exists'    => 'CPL tidak ditemukan.',
+            'cpmks.*.bobot.required'   => 'Bobot CPMK wajib diisi.',
+            'cpmks.*.bobot.numeric'    => 'Bobot CPMK harus berupa angka.',
+            'cpmks.*.bobot.min'        => 'Bobot CPMK minimal 0.',
+            'cpmks.*.bobot.max'        => 'Bobot CPMK maksimal 100.',
 
-            'cpmks.*.cpmk_id.required' => 'ID CPMK wajib disertakan.',
-            'cpmks.*.cpmk_id.exists' => 'CPMK yang dipilih tidak valid.',
-            'cpmks.*.cpl_id.required' => 'ID CPL wajib disertakan untuk mapping CPMK.',
-            'cpmks.*.cpl_id.exists' => 'CPL yang dipilih tidak valid.',
-            'cpmks.*.bobot.required' => 'Bobot untuk CPMK wajib diisi.',
-            'cpmks.*.bobot.numeric' => 'Bobot CPMK harus berupa angka.',
-            'cpmks.*.bobot.min' => 'Bobot CPMK minimal 0.',
-            'cpmks.*.bobot.max' => 'Bobot CPMK maksimal 100.',
+            // view & delete
+            'cpmk_id.required'        => 'ID CPMK wajib disertakan.',
+            'cpmk_id.exists'          => 'CPMK tidak ditemukan.',
+            'cpl_id.required'         => 'ID CPL wajib disertakan untuk dihapus.',
+            'cpl_id.exists'           => 'CPL tidak ditemukan.',
         ];
     }
 }

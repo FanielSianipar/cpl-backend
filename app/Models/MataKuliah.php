@@ -48,9 +48,9 @@ class MataKuliah extends Model
     }
 
     // jika cpmk hanya dipakai di satu mata kuliah
-    public function cpmk()
+    public function cpmks()
     {
-        return $this->hasMany(Cpmk::class, 'mata_kuliah_id', 'mata_kuliah_id');
+        return $this->hasMany(CPMK::class, 'mata_kuliah_id', 'mata_kuliah_id');
     }
 
     // jika cpmk dipakai berulang, maka memakai many-to-many
