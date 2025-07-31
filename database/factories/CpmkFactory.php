@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\CPMK;
-use App\Models\Prodi;
+use App\Models\MataKuliah;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -33,8 +33,8 @@ class CpmkFactory extends Factory
             // Deskripsi CPMK
             'deskripsi' => $this->faker->paragraph(),
             // Jika tidak diberikan, factory Prodi akan membuat instance Prodi baru
-            'prodi_id' => function () {
-                return Prodi::factory()->create()->prodi_id;
+            'mata_kuliah_id' => function () {
+                return MataKuliah::factory()->create()->mata_kuliah_id;
             },
         ];
     }

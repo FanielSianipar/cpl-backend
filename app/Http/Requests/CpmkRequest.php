@@ -47,7 +47,7 @@ class CpmkRequest extends FormRequest
                 ],
                 'nama_cpmk'  => 'required|string|max:50',
                 'deskripsi' => 'required|string|max:500',
-                'prodi_id' => 'exists:prodi,prodi_id',
+                'mata_kuliah_id' => 'sometimes|exists:mata_kuliah,mata_kuliah_id',
             ];
         }
 
@@ -58,10 +58,10 @@ class CpmkRequest extends FormRequest
         }
 
         return [
+            'mata_kuliah_id' => 'required|exists:mata_kuliah,mata_kuliah_id',
             'kode_cpmk'  => 'required|string|max:10|unique:cpmk,kode_cpmk',
             'nama_cpmk'  => 'required|string|max:50',
             'deskripsi' => 'required|string|max:500',
-            'prodi_id' => 'exists:prodi,prodi_id',
         ];
     }
 
@@ -73,6 +73,8 @@ class CpmkRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'mata_kuliah_id.required' => 'ID Mata Kuliah wajib diisi.',
+            'mata_kuliah_id.exists' => 'Mata Kuliah dengan ID yang diberikan tidak ditemukan.',
             'cpmk_id.exists' => 'CPMK dengan ID yang diberikan tidak ditemukan.',
             'cpmk_id.required' => 'ID CPMK wajib dikirim.',
             'kode_cpmk.required' => 'Kode CPMK wajib diisi.',
@@ -85,7 +87,6 @@ class CpmkRequest extends FormRequest
             'deskripsi.required' => 'Deskripsi CPMK wajib diisi.',
             'deskripsi.string' => 'Deskripsi CPMK harus berupa teks.',
             'deskripsi.max' => 'Deskripsi CPMK maksimal terdiri dari 500 karakter.',
-            'prodi_id.exists' => 'Program studi tidak ditemukan.',
         ];
     }
 }

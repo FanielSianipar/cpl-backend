@@ -47,15 +47,22 @@ class MataKuliah extends Model
             ->withTimestamps();
     }
 
+    // jika cpmk hanya dipakai di satu mata kuliah
+    public function cpmk()
+    {
+        return $this->hasMany(Cpmk::class, 'mata_kuliah_id', 'mata_kuliah_id');
+    }
+
+    // jika cpmk dipakai berulang, maka memakai many-to-many
     /**
      * Relasi many-to-many ke CPMK dengan pivot.
      * Termasuk kolom cpl_id di pivot untuk mengetahui CPL mana yang menjadi induk.
      */
-    public function cpmks()
-    {
-        return $this->belongsToMany(CPMK::class, 'cpmk_mata_kuliah', 'mata_kuliah_id', 'cpmk_id')
-            ->withPivot('bobot', 'cpl_id')
-            ->using(MataKuliahCpmkPivot::class)
-            ->withTimestamps();
-    }
+    // public function cpmks()
+    // {
+    //     return $this->belongsToMany(CPMK::class, 'cpmk_mata_kuliah', 'mata_kuliah_id', 'cpmk_id')
+    //         ->withPivot('bobot', 'cpl_id')
+    //         ->using(MataKuliahCpmkPivot::class)
+    //         ->withTimestamps();
+    // }
 }

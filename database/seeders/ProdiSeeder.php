@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Fakultas;
 use App\Models\Prodi;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ProdiSeeder extends Seeder
@@ -24,7 +23,7 @@ class ProdiSeeder extends Seeder
                     // Menghasilkan kode prodi dengan menggabungkan kode fakultas dengan nomor prodi
                     'kode_prodi' => $fakultas->kode_fakultas . '-PR' . str_pad($i, 2, '0', STR_PAD_LEFT),
                     // Misalnya: Fakultas Teknik Prodi 1, Fakultas Teknik Prodi 2, dst.
-                    'nama_prodi' => $fakultas->nama_fakultas . ' Prodi ' . $i,
+                    'nama_prodi' => $fakultas->kode_fakultas . ' Prodi ' . $i,
                     'fakultas_id' => $fakultas->fakultas_id,
                 ]);
             }

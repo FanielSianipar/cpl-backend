@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\CPMK;
 use App\Models\Fakultas;
+use App\Models\MataKuliah;
 use App\Models\Prodi;
 use App\Models\Role;
 use App\Models\User;
@@ -19,6 +20,7 @@ class DataCpmkTest extends TestCase
     protected $adminProdiRole;
     protected $permission;
     protected $prodi;
+    protected $mataKuliah;
 
     protected function setUp(): void
     {
@@ -39,6 +41,10 @@ class DataCpmkTest extends TestCase
             'fakultas_id' => $fakultas->fakultas_id,
         ]);
 
+        $this->mataKuliah = MataKuliah::factory()->create([
+            'prodi_id' => $this->prodi->prodi_id,
+        ]);
+
         // Buat role Admin Prodi dengan izin mengelola CPMK
         $this->adminProdiRole = Role::firstOrCreate(['name' => 'Admin Prodi', 'guard_name' => 'web']);
         $this->permission = Permission::firstOrCreate(['name' => 'Mengelola data CPMK', 'guard_name' => 'web']);
@@ -55,18 +61,17 @@ class DataCpmkTest extends TestCase
      */
     public function test_view_all_data_cpmk(): void
     {
-        Cpmk::factory()->create([
+        CPMK::factory()->create([
             'kode_cpmk' => 'CPMK444',
             'nama_cpmk' => 'Nama1 CPMK',
             'deskripsi' => 'Deskripsi1 CPMK',
-            'prodi_id' => $this->user->prodi_id,
+            'mata_kuliah_id'  => $this->mataKuliah->mata_kuliah_id,
         ]);
-
-        Cpmk::factory()->create([
+        CPMK::factory()->create([
             'kode_cpmk' => 'CPMK555',
             'nama_cpmk' => 'Nama2 CPMK',
             'deskripsi' => 'Deskripsi2 CPMK',
-            'prodi_id' => $this->user->prodi_id,
+            'mata_kuliah_id'  => $this->mataKuliah->mata_kuliah_id,
         ]);
 
         $payload = ['action' => 'view'];
@@ -81,7 +86,7 @@ class DataCpmkTest extends TestCase
 
         $data = $response->json('data');
         $this->assertIsArray($data);
-        $this->assertGreaterThanOrEqual(2, count($data));
+        $this->assertCount(2, $data);
     }
 
     /**
@@ -89,19 +94,20 @@ class DataCpmkTest extends TestCase
      */
     public function test_view_detail_data_cpmk_berdasarkan_id(): void
     {
-        $cpmk = Cpmk::factory()->create([
+        $cpmk = CPMK::factory()->create([
             'kode_cpmk' => 'CPMK999',
             'nama_cpmk' => 'Nama CPMK',
             'deskripsi' => 'Deskripsi CPMK',
-            'prodi_id' => $this->user->prodi_id,
+            'mata_kuliah_id'  => $this->mataKuliah->mata_kuliah_id,
         ]);
 
         $payload = [
-            'action' => 'view',
-            'cpmk_id' => $cpmk->prodi_id,
+            'action'  => 'view',
+            'cpmk_id' => $cpmk->cpmk_id,
         ];
 
-        $response = $this->actingAs($this->user)->postJson('/api/kelola-data-cpmk', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-cpmk', $payload);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -109,8 +115,8 @@ class DataCpmkTest extends TestCase
             ]);
 
         $data = $response->json('data');
-        $this->assertEquals($cpmk->prodi_id, $data['cpmk_id']);
-        $this->assertEquals($cpmk->prodi_id, $data['prodi_id']);
+        $this->assertEquals($cpmk->cpmk_id, $data['cpmk_id']);
+        $this->assertEquals($cpmk->mata_kuliah_id, $data['mata_kuliah_id']);
     }
 
     /**
@@ -119,14 +125,15 @@ class DataCpmkTest extends TestCase
     public function test_store_data_cpmk_berhasil(): void
     {
         $payload = [
-            'action' => 'store',
+            'action'    => 'store',
             'kode_cpmk' => 'CPMK999',
             'nama_cpmk' => 'Store CPMK',
             'deskripsi' => 'Deskripsi Store CPMK',
-            'prodi_id' => $this->user->prodi_id,
+            'mata_kuliah_id'  => $this->mataKuliah->mata_kuliah_id,
         ];
 
-        $response = $this->actingAs($this->user)->postJson('/api/kelola-data-cpmk', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-cpmk', $payload);
 
         $response->assertStatus(201)
             ->assertJson([
@@ -135,7 +142,7 @@ class DataCpmkTest extends TestCase
 
         $this->assertDatabaseHas('cpmk', [
             'kode_cpmk' => 'CPMK999',
-            'prodi_id' => $this->user->prodi_id,
+            'mata_kuliah_id'  => $this->mataKuliah->mata_kuliah_id,
         ]);
     }
 
@@ -145,17 +152,22 @@ class DataCpmkTest extends TestCase
     public function test_store_data_cpmk_validasi_gagal(): void
     {
         $payload = [
-            'action' => 'store',
+            'action'    => 'store',
             'kode_cpmk' => '',
             'nama_cpmk' => '',
             'deskripsi' => '',
-            'prodi_id' => '',
+            'mata_kuliah_id'  => '',
         ];
 
-        $response = $this->actingAs($this->user)->postJson('/api/kelola-data-cpmk', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-cpmk', $payload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['kode_cpmk', 'nama_cpmk', 'prodi_id']);
+            ->assertJsonValidationErrors([
+                'kode_cpmk',
+                'nama_cpmk',
+                'mata_kuliah_id',
+            ]);
     }
 
     /**
@@ -163,22 +175,23 @@ class DataCpmkTest extends TestCase
      */
     public function test_update_data_cpmk_berhasil(): void
     {
-        $cpmk = Cpmk::factory()->create([
+        $cpmk = CPMK::factory()->create([
             'kode_cpmk' => 'CPMK000',
             'nama_cpmk' => 'CPMK Lama',
             'deskripsi' => 'Deskripsi Lama',
-            'prodi_id' => $this->user->prodi_id,
+            'mata_kuliah_id'  => $this->mataKuliah->mata_kuliah_id,
         ]);
 
         $payload = [
-            'action' => 'update',
-            'cpmk_id' => $cpmk->prodi_id,
+            'action'    => 'update',
+            'cpmk_id'   => $cpmk->cpmk_id,  // gunakan cpmk_id
             'kode_cpmk' => 'CPMK888',
             'nama_cpmk' => 'CPMK Baru',
             'deskripsi' => 'Deskripsi Baru',
         ];
 
-        $response = $this->actingAs($this->user)->postJson('/api/kelola-data-cpmk', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-cpmk', $payload);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -186,7 +199,7 @@ class DataCpmkTest extends TestCase
             ]);
 
         $this->assertDatabaseHas('cpmk', [
-            'prodi_id' => $cpmk->prodi_id,
+            'cpmk_id'   => $cpmk->cpmk_id,
             'kode_cpmk' => 'CPMK888',
             'nama_cpmk' => 'CPMK Baru',
         ]);
@@ -197,26 +210,31 @@ class DataCpmkTest extends TestCase
      */
     public function test_update_data_cpmk_validasi_gagal(): void
     {
-        $cpmk = Cpmk::factory()->create([
+        $cpmk = CPMK::factory()->create([
             'kode_cpmk' => 'CPMK111',
             'nama_cpmk' => 'CPMK Awal',
             'deskripsi' => 'Deskripsi Awal',
-            'prodi_id' => $this->user->prodi_id,
+            'mata_kuliah_id'  => $this->mataKuliah->mata_kuliah_id,
         ]);
 
         $payload = [
-            'action' => 'update',
-            'cpmk_id' => $cpmk->prodi_id,
+            'action'    => 'update',
+            'cpmk_id'   => $cpmk->cpmk_id,
             'kode_cpmk' => '',
             'nama_cpmk' => '',
             'deskripsi' => '',
-            'prodi_id' => 9999, // ID prodi tidak valid
+            'mata_kuliah_id'  => '', // mata_kuliah_id tidak valid
         ];
 
-        $response = $this->actingAs($this->user)->postJson('/api/kelola-data-cpmk', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-cpmk', $payload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['kode_cpmk', 'nama_cpmk', 'prodi_id']);
+            ->assertJsonValidationErrors([
+                'kode_cpmk',
+                'nama_cpmk',
+                'mata_kuliah_id',
+            ]);
     }
 
     /**
@@ -224,19 +242,20 @@ class DataCpmkTest extends TestCase
      */
     public function test_delete_data_cpmk_berhasil(): void
     {
-        $cpmk = Cpmk::factory()->create([
+        $cpmk = CPMK::factory()->create([
             'kode_cpmk' => 'CPMK222',
             'nama_cpmk' => 'CPMK Hapus',
             'deskripsi' => 'Deskripsi Hapus',
-            'prodi_id' => $this->user->prodi_id,
+            'mata_kuliah_id'  => $this->mataKuliah->mata_kuliah_id,
         ]);
 
         $payload = [
-            'action' => 'delete',
-            'cpmk_id' => $cpmk->prodi_id,
+            'action'  => 'delete',
+            'cpmk_id' => $cpmk->cpmk_id,  // gunakan cpmk_id
         ];
 
-        $response = $this->actingAs($this->user)->postJson('/api/kelola-data-cpmk', $payload);
+        $response = $this->actingAs($this->user)
+            ->postJson('/api/kelola-data-cpmk', $payload);
 
         $response->assertStatus(200)
             ->assertJson([
@@ -244,7 +263,7 @@ class DataCpmkTest extends TestCase
             ]);
 
         $this->assertDatabaseMissing('cpmk', [
-            'prodi_id' => $cpmk->prodi_id,
+            'cpmk_id' => $cpmk->cpmk_id,
         ]);
     }
 }

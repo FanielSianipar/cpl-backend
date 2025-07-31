@@ -684,20 +684,20 @@ class AdminProdiService
                 case 'view':
                     // Jika terdapat parameter id, ambil detail satu data CPMK.
                     if (isset($data['cpmk_id'])) {
-                        $cpmk = CPMK::with(['Prodi' => function ($query) {
-                            $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
+                        $cpmk = CPMK::with(['mataKuliah' => function ($query) {
+                            $query->select('mata_kuliah_id', 'kode_mata_kuliah', 'nama_mata_kuliah');
                         }])
-                            ->select('cpmk_id', 'kode_cpmk', 'nama_cpmk', 'deskripsi', 'prodi_id')
+                            ->select('cpmk_id', 'kode_cpmk', 'nama_cpmk', 'deskripsi', 'mata_kuliah_id')
                             ->findOrFail($data['cpmk_id']);
                         return [
                             'data'    => $cpmk,
                             'message' => 'Data CPMK berhasil diambil.'
                         ];
                     } else {
-                        $cpmks = CPMK::with(['prodi' => function ($query) {
-                            $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
+                        $cpmks = CPMK::with(['mataKuliah' => function ($query) {
+                            $query->select('mata_kuliah_id', 'kode_mata_kuliah', 'nama_mata_kuliah');
                         }])
-                            ->select('cpmk_id', 'kode_cpmk', 'nama_cpmk', 'deskripsi', 'prodi_id')
+                            ->select('cpmk_id', 'kode_cpmk', 'nama_cpmk', 'deskripsi', 'mata_kuliah_id')
                             ->get();
                         return [
                             'data'    => $cpmks,
@@ -713,7 +713,7 @@ class AdminProdiService
                         'kode_cpmk'      => $data['kode_cpmk'],
                         'nama_cpmk'     => $data['nama_cpmk'],
                         'deskripsi'     => $data['deskripsi'],
-                        'prodi_id' => auth()->user()->prodi_id,
+                        'mata_kuliah_id' => $data['mata_kuliah_id'],
                     ]);
                     DB::commit();
 
@@ -730,14 +730,15 @@ class AdminProdiService
 
                     // Perbarui data CPMK.
                     DB::beginTransaction();
-                    $cpmk = CPMK::with('prodi')->findOrFail($data['cpmk_id']);
+                    $cpmk = CPMK::with('mataKuliah')->findOrFail($data['cpmk_id']);
 
                     $cpmk->update([
                         'kode_cpmk'     => $data['kode_cpmk']     ?? $cpmk->kode_cpmk,
                         'nama_cpmk'     => $data['nama_cpmk']     ?? $cpmk->nama_cpmk,
                         'deskripsi'     => $data['deskripsi']     ?? $cpmk->deskripsi,
+                        'mata_kuliah_id' => $data['mata_kuliah_id'] ?? $cpmk->mata_kuliah_id,
                     ]);
-                    $cpmk = $cpmk->fresh('prodi');
+                    $cpmk = $cpmk->fresh('mataKuliah');
 
                     DB::commit();
 
