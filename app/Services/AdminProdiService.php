@@ -865,57 +865,88 @@ class AdminProdiService
     {
         DB::beginTransaction();
         try {
-            $mataKuliah = MataKuliah::findOrFail($mataKuliahId);
-            $totalBobot = 0;
-            $syncData = [];
+            $mataKuliah     = MataKuliah::with('cpls')->findOrFail($mataKuliahId);
+            $existingTotal  = $mataKuliah->cpls->sum(fn($c) => $c->pivot->bobot);
 
-            // Hitung total bobot dan persiapkan data sync
+            $syncData = [];
+            $newTotal  = 0;
             foreach ($cpls as $item) {
-                if (!isset($item['cpl_id']) || !isset($item['bobot'])) {
+                if (!isset($item['cpl_id'], $item['bobot'])) {
                     throw new \Exception('Data CPL tidak lengkap.');
                 }
-                $totalBobot += $item['bobot'];
-                $syncData[$item['cpl_id']] = ['bobot' => $item['bobot']];
+                $cplId = (int) $item['cpl_id'];
+                $bobot = (float) $item['bobot'];
+                $syncData[$cplId] = ['bobot' => $bobot];
+                $newTotal += $bobot;
             }
 
-            // Validasi: total bobot harus 100%
-            if (abs($totalBobot - 100.00) > 0.01) {
-                throw new \Illuminate\Validation\ValidationException(
-                    validator: validator([], []),
-                    response: response()->json(['message' => "Total bobot CPL harus 100%"], 422)
-                );
+            // --- Cek duplikat untuk mode store ---
+            if ($mode === 'store') {
+                // Ambil daftar cpl_id yang sudah ada
+                $existingIds = $mataKuliah->cpls->pluck('cpl_id')->toArray();
+                $inputIds    = array_keys($syncData);
+
+                // Cari duplikasi
+                $dupes = array_intersect($existingIds, $inputIds);
+                if (!empty($dupes)) {
+                    // Ambil nama CPL berdasarkan ID yang duplikat
+                    $dupeNames = Cpl::whereIn('cpl_id', $dupes)
+                        ->pluck('nama_cpl')
+                        ->toArray();
+
+                    // Format pesannya
+                    $message = implode(', ', $dupeNames)
+                        . ' sudah terdaftar pada mata kuliah ini.';
+
+                    throw ValidationException::withMessages([
+                        'cpls' => [$message]
+                    ]);
+                }
             }
 
-            // Jika action store, periksa apakah mapping sudah ada.
-            if ($mode === 'store' && $mataKuliah->cpls()->exists()) {
-                throw new \Illuminate\Validation\ValidationException(
-                    validator: validator([], []),
-                    response: response()->json(['message' => "Mapping CPL sudah ada untuk mata kuliah ini. Gunakan action update untuk merubah data."], 422)
-                );
+            // --- Validasi total bobot maksimum 100% ---
+            if ($mode === 'store') {
+                $total = $existingTotal + $newTotal;
+            } else {
+                // Kurangi bobot lama untuk CPL yang di‐update
+                $idsUpdating     = array_keys($syncData);
+                $oldForUpdating  = $mataKuliah->cpls
+                    ->whereIn('cpl_id', $idsUpdating)
+                    ->sum(fn($c) => $c->pivot->bobot);
+                $total = ($existingTotal - $oldForUpdating) + $newTotal;
             }
 
-            // Lakukan sinkronisasi (sync) data ke tabel pivot
-            $mataKuliah->cpls()->sync($syncData);
+            if ($total > 100.0) {
+                throw ValidationException::withMessages([
+                    'cpls' => ['Total bobot CPL melebihi 100%']
+                ]);
+            }
+
+            // Simpan mapping:
+            if ($mode === 'store') {
+                $mataKuliah->cpls()->attach($syncData);
+            } else {
+                // Bisa langsung sync juga: $mataKuliah->cpls()->sync($syncData);
+                $mataKuliah->cpls()->detach(array_keys($syncData));
+                $mataKuliah->cpls()->attach($syncData);
+            }
 
             DB::commit();
 
-            // Muat ulang relasi untuk response
             $mataKuliah->load('cpls');
-
             return [
                 'data'    => $mataKuliah->cpls,
                 'message' => "Pemetaan CPL berhasil " . ($mode === 'store' ? 'ditambahkan.' : 'diperbarui.')
             ];
-        } catch (\Illuminate\Validation\ValidationException $ve) {
+        } catch (ValidationException $ve) {
             DB::rollBack();
-            // Mengembalikan pesan error sesuai dengan response pada exception
-            $data = $ve->getResponse()->getData();
-            return ['message' => $data->message];
+            throw $ve;
         } catch (\Exception $e) {
             DB::rollBack();
             return ['message' => 'Pemetaan CPL gagal: ' . $e->getMessage()];
         }
     }
+
 
     /**
      * Mengelola pemetaan CPMK pada sebuah mata kuliah.

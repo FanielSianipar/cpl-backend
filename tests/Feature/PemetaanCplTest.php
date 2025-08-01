@@ -221,8 +221,8 @@ class PemetaanCplTest extends TestCase
             'action'         => 'store',
             'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
             'cpls'           => [
-                ['cpl_id' => $cpl1->cpl_id, 'bobot' => 30.00],
-                ['cpl_id' => $cpl2->cpl_id, 'bobot' => 20.00],
+                ['cpl_id' => $cpl1->cpl_id, 'bobot' => 50.00],
+                ['cpl_id' => $cpl2->cpl_id, 'bobot' => 70.00],
             ],
         ];
 
@@ -231,7 +231,7 @@ class PemetaanCplTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonFragment([
-                'message' => 'Total bobot CPL harus 100%'
+                'message' => 'Total bobot CPL melebihi 100%'
             ]);
     }
 
@@ -309,12 +309,12 @@ class PemetaanCplTest extends TestCase
             $cpl2->cpl_id => ['bobot' => 50.00],
         ]);
 
-        // Update gagal: total bobot menjadi 80% (harus 100%)
+        // Update gagal: total bobot melebihi 100%
         $payload = [
             'action'         => 'update',
             'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
             'cpls'           => [
-                ['cpl_id' => $cpl1->cpl_id, 'bobot' => 30.00],
+                ['cpl_id' => $cpl1->cpl_id, 'bobot' => 80.00],
                 ['cpl_id' => $cpl2->cpl_id, 'bobot' => 50.00],
             ],
         ];
@@ -324,7 +324,7 @@ class PemetaanCplTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonFragment([
-                'message' => 'Total bobot CPL harus 100%'
+                'message' => 'Total bobot CPL melebihi 100%'
             ]);
     }
 

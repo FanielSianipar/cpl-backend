@@ -29,7 +29,7 @@ class PemetaanCplRequest extends FormRequest
 
         if (in_array($this->input('action'), ['store', 'update'])) {
             $rules['cpls'] = 'required|array|min:1';
-            $rules['cpls.*.cpl_id'] = 'required|exists:cpl,cpl_id';
+            $rules['cpls.*.cpl_id'] = 'required|exists:cpl,cpl_id|distinct';
             $rules['cpls.*.bobot'] = 'required|numeric|min:0|max:100';
         }
 
@@ -51,6 +51,7 @@ class PemetaanCplRequest extends FormRequest
             'cpls.min' => 'Minimal satu data CPL harus disertakan.',
             'cpls.*.cpl_id.required' => 'ID CPL wajib disertakan.',
             'cpls.*.cpl_id.exists' => 'CPL yang dipilih tidak valid.',
+            'cpls.*.cpl_id.distinct' => 'Tidak boleh ada CPL yang sama dalam satu mata kuliah.',
             'cpls.*.bobot.required' => 'Bobot untuk CPL wajib diisi.',
             'cpls.*.bobot.numeric' => 'Bobot CPL harus berupa angka.',
             'cpls.*.bobot.min' => 'Bobot CPL minimal 0.',
