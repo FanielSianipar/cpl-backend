@@ -43,7 +43,7 @@ class CplRequest extends FormRequest
                     'required',
                     'string',
                     'max:15',
-                    Rule::unique('cpl', 'kode_cpl')->ignore($this->input('cpl_id'), 'cpl_id')
+                    // Rule::unique('cpl', 'kode_cpl')->ignore($this->input('cpl_id'), 'cpl_id')
                 ],
                 'nama_cpl'  => 'required|string|max:50',
                 'deskripsi' => 'required|string|max:500',
@@ -58,7 +58,7 @@ class CplRequest extends FormRequest
         }
 
         return [
-            'kode_cpl'  => 'required|string|max:10|unique:cpl,kode_cpl',
+            'kode_cpl'  => 'required|string|max:10',
             'nama_cpl'  => 'required|string|max:50',
             'deskripsi' => 'required|string|max:500',
             'prodi_id' => 'exists:prodi,prodi_id',
@@ -78,7 +78,7 @@ class CplRequest extends FormRequest
             'kode_cpl.required' => 'Kode CPL wajib diisi.',
             'kode_cpl.string' => 'Kode CPL harus berupa teks.',
             'kode_cpl.max' => 'Kode CPL maksimal terdiri dari 15 karakter.',
-            'kode_cpl.unique' => 'Kode CPL sudah digunakan oleh CPL lain.',
+            // 'kode_cpl.unique' => 'Kode CPL sudah digunakan oleh CPL lain.',
             'nama_cpl.required' => 'Nama CPL wajib diisi.',
             'nama_cpl.string' => 'Nama CPL harus berupa teks.',
             'nama_cpl.max' => 'Nama CPL maksimal terdiri dari 50 karakter.',
