@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\CPL;
+use App\Models\CplMataKuliah;
 use App\Models\Fakultas;
 use App\Models\MataKuliah;
 use App\Models\Prodi;
@@ -69,19 +70,19 @@ class PemetaanCplTest extends TestCase
         $cpl1 = Cpl::factory()->create([
             'kode_cpl' => 'CPL100',
             'nama_cpl' => 'CPL 1',
-            'deskripsi'=> 'deskripsi',
+            'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl2 = Cpl::factory()->create([
             'kode_cpl' => 'CPL200',
             'nama_cpl' => 'CPL 2',
-            'deskripsi'=> 'deskripsi',
+            'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl3 = Cpl::factory()->create([
             'kode_cpl' => 'CPL300',
             'nama_cpl' => 'CPL 3',
-            'deskripsi'=> 'deskripsi',
+            'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
 
@@ -118,7 +119,7 @@ class PemetaanCplTest extends TestCase
         $cpl = Cpl::factory()->create([
             'kode_cpl' => 'CPL400',
             'nama_cpl' => 'CPL Detail',
-            'deskripsi'=> 'deskripsi',
+            'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
 
@@ -155,19 +156,19 @@ class PemetaanCplTest extends TestCase
         $cpl1 = Cpl::factory()->create([
             'kode_cpl' => 'CPL101',
             'nama_cpl' => 'CPL 1',
-            'deskripsi'=> 'deskripsi',
+            'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl2 = Cpl::factory()->create([
             'kode_cpl' => 'CPL102',
             'nama_cpl' => 'CPL 2',
-            'deskripsi'=> 'deskripsi',
+            'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl3 = Cpl::factory()->create([
             'kode_cpl' => 'CPL103',
             'nama_cpl' => 'CPL 3',
-            'deskripsi'=> 'deskripsi',
+            'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
 
@@ -206,13 +207,13 @@ class PemetaanCplTest extends TestCase
         $cpl1 = Cpl::factory()->create([
             'kode_cpl' => 'CPL501',
             'nama_cpl' => 'CPL Gagal 1',
-            'deskripsi'=> 'deskripsi',
+            'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl2 = Cpl::factory()->create([
             'kode_cpl' => 'CPL502',
             'nama_cpl' => 'CPL Gagal 2',
-            'deskripsi'=> 'deskripsi',
+            'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
 
@@ -243,13 +244,13 @@ class PemetaanCplTest extends TestCase
         $cpl1 = Cpl::factory()->create([
             'kode_cpl' => 'CPL201',
             'nama_cpl' => 'CPL 1',
-            'deskripsi'=> 'deskripsi',
+            'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl2 = Cpl::factory()->create([
             'kode_cpl' => 'CPL202',
             'nama_cpl' => 'CPL 2',
-            'deskripsi'=> 'deskripsi',
+            'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $this->mataKuliah->cpls()->sync([
@@ -295,13 +296,13 @@ class PemetaanCplTest extends TestCase
         $cpl1 = Cpl::factory()->create([
             'kode_cpl' => 'CPL601',
             'nama_cpl' => 'CPL Update Gagal 1',
-            'deskripsi'=> 'deskripsi',
+            'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl2 = Cpl::factory()->create([
             'kode_cpl' => 'CPL602',
             'nama_cpl' => 'CPL Update Gagal 2',
-            'deskripsi'=> 'deskripsi',
+            'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $this->mataKuliah->cpls()->sync([
@@ -334,37 +335,48 @@ class PemetaanCplTest extends TestCase
     public function test_delete_pemetaan_cpl_berhasil(): void
     {
         $cpl1 = Cpl::factory()->create([
-            'kode_cpl' => 'CPL301',
-            'nama_cpl' => 'CPL 1',
-            'deskripsi'=> 'deskripsi',
-            'prodi_id' => $this->mataKuliah->prodi_id,
+            'kode_cpl'  => 'CPL301',
+            'nama_cpl'  => 'CPL 1',
+            'deskripsi' => 'deskripsi',
+            'prodi_id'  => $this->mataKuliah->prodi_id,
         ]);
         $cpl2 = Cpl::factory()->create([
-            'kode_cpl' => 'CPL302',
-            'nama_cpl' => 'CPL 2',
-            'deskripsi'=> 'deskripsi',
-            'prodi_id' => $this->mataKuliah->prodi_id,
+            'kode_cpl'  => 'CPL302',
+            'nama_cpl'  => 'CPL 2',
+            'deskripsi' => 'deskripsi',
+            'prodi_id'  => $this->mataKuliah->prodi_id,
         ]);
         $this->mataKuliah->cpls()->sync([
             $cpl1->cpl_id => ['bobot' => 40.00],
             $cpl2->cpl_id => ['bobot' => 60.00],
         ]);
 
+        // Ambil satu pivot untuk di‐delete
+        $pivotToDelete = CplMataKuliah::where('mata_kuliah_id', $this->mataKuliah->mata_kuliah_id)
+            ->where('cpl_id', $cpl1->cpl_id)
+            ->first();
+
         $payload = [
-            'action'         => 'delete',
-            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
+            'action'                => 'delete',
+            'cpl_mata_kuliah_id'    => $pivotToDelete->cpl_mata_kuliah_id,
         ];
 
         $response = $this->actingAs($this->user)
             ->postJson('/api/pemetaan-cpl', $payload);
 
+        // Verifikasi response
         $response->assertStatus(200)
-            ->assertJson([
-                'message' => 'Pemetaan CPL berhasil dihapus.'
-            ]);
+            ->assertJson(['message' => 'Pemetaan CPL berhasil dihapus.']);
 
+        // Pivot yang dihapus tidak ada
         $this->assertDatabaseMissing('cpl_mata_kuliah', [
+            'cpl_mata_kuliah_id' => $pivotToDelete->cpl_mata_kuliah_id,
+        ]);
+
+        // Pivot lain masih ada
+        $this->assertDatabaseHas('cpl_mata_kuliah', [
             'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
+            'cpl_id'         => $cpl2->cpl_id,
         ]);
     }
 }
