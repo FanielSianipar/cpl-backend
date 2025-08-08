@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CPL;
+use App\Models\CplMataKuliah;
 use App\Models\CPMK;
 use App\Models\Kelas;
 use App\Models\Mahasiswa;
@@ -831,13 +832,13 @@ class AdminProdiService
 
             case 'delete':
                 // Untuk delete, keluarkan seluruh mapping CPL untuk mata kuliah tertentu.
-                if (!isset($data['mata_kuliah_id'])) {
-                    return ['message' => 'ID mata kuliah diperlukan untuk aksi delete.'];
+                if (!isset($data['cpl_mata_kuliah_id'])) {
+                    return ['message' => 'ID pemetaan CPL diperlukan untuk aksi delete.'];
                 }
                 try {
                     DB::beginTransaction();
-                    $mataKuliah = MataKuliah::findOrFail($data['mata_kuliah_id']);
-                    $mataKuliah->cpls()->detach();
+                    $cplMataKuliah = CplMataKuliah::findOrFail($data['cpl_mata_kuliah_id']);
+                    $cplMataKuliah->delete();
                     DB::commit();
                     return ['message' => 'Pemetaan CPL berhasil dihapus.'];
                 } catch (\Exception $e) {

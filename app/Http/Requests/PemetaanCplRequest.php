@@ -22,15 +22,21 @@ class PemetaanCplRequest extends FormRequest
      */
     public function rules(): array
     {
+        $action = $this->input('action');
+
         $rules = [
             'action' => 'required|in:store,update,view,delete',
-            'mata_kuliah_id' => 'required|exists:mata_kuliah,mata_kuliah_id',
         ];
 
-        if (in_array($this->input('action'), ['store', 'update'])) {
-            $rules['cpls'] = 'required|array|min:1';
-            $rules['cpls.*.cpl_id'] = 'required|exists:cpl,cpl_id|distinct';
-            $rules['cpls.*.bobot'] = 'required|numeric|min:0|max:100';
+        if (in_array($action, ['store', 'update'])) {
+            $rules['mata_kuliah_id']   = 'required|exists:mata_kuliah,mata_kuliah_id';
+            $rules['cpls']             = 'required|array|min:1';
+            $rules['cpls.*.cpl_id']    = 'required|exists:cpl,cpl_id|distinct';
+            $rules['cpls.*.bobot']     = 'required|numeric|min:0|max:100';
+        } elseif ($action === 'view') {
+            $rules['mata_kuliah_id']   = 'required|exists:mata_kuliah,mata_kuliah_id';
+        } elseif ($action === 'delete') {
+            $rules['cpl_mata_kuliah_id'] = 'required|exists:cpl_mata_kuliah,cpl_mata_kuliah_id';
         }
 
         return $rules;
@@ -56,6 +62,8 @@ class PemetaanCplRequest extends FormRequest
             'cpls.*.bobot.numeric' => 'Bobot CPL harus berupa angka.',
             'cpls.*.bobot.min' => 'Bobot CPL minimal 0.',
             'cpls.*.bobot.max' => 'Bobot CPL maksimal 100.',
+            'cpl_mata_kuliah_id.required' => 'ID pemetaan CPL wajib disertakan.',
+            'cpl_mata_kuliah_id.exists'   => 'Pemetaan CPL tidak ditemukan.',
         ];
     }
 }
