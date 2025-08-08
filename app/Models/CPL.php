@@ -39,7 +39,7 @@ class CPL extends Model
     public function mataKuliahs()
     {
         return $this->belongsToMany(MataKuliah::class, 'cpl_mata_kuliah', 'cpl_id', 'mata_kuliah_id')
-            ->withPivot('bobot')
+            ->withPivot('cpl_mata_kuliah_id', 'bobot')
             ->withTimestamps();
     }
 }
