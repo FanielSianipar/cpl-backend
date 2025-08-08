@@ -6,6 +6,7 @@ use App\Models\CPL;
 use App\Models\CPMK;
 use App\Models\Fakultas;
 use App\Models\MataKuliah;
+use App\Models\MataKuliahCpmkPivot;
 use App\Models\Prodi;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -348,36 +349,38 @@ class PemetaanCpmkTest extends TestCase
      */
     public function test_delete_pemetaan_cpmk_berhasil(): void
     {
-        $cpmk1 = CPMK::factory()->create([
-            'kode_cpmk' => 'kcpmkD',
-            'nama_cpmk' => 'cpmkDelete',
-            'deskripsi' => 'deskripsi cpmkDelete',
-            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id
+        // 1. Siapkan CPMK dan buat relasi pivot CPL
+        $cpmk = CPMK::factory()->create([
+            'kode_cpmk'      => 'KCMPKD',
+            'nama_cpmk'      => 'CPMK Delete',
+            'deskripsi'      => 'deskripsi cpmkDelete',
+            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
         ]);
 
-        // Karena validasi request mensyaratkan key 'cpmks' untuk aksi delete, sertakan juga
+        // Pilih CPL dan attach pivot dengan bobot
+        $cplId = $this->mataKuliah->cpls->first()->cpl_id;
+        $cpmk->cpls()->attach($cplId, ['bobot' => 25.00]);
+
+        // 2. Query tabel pivot untuk mendapatkan ID record yang baru
+        $pivotId = MataKuliahCpmkPivot::where('cpmk_id', $cpmk->cpmk_id)
+            ->where('cpl_id', $cplId)
+            ->value('cpmk_mata_kuliah_id');
+
+        // 3. Panggil endpoint delete
         $payload = [
-            'action'         => 'delete',
-            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
-            'cpmks'          => [
-                [
-                    'cpmk_id' => $cpmk1->cpmk_id,
-                    'cpl_id'  => $this->mataKuliah->cpls->first()->cpl_id,
-                ]
-            ],
+            'action'               => 'delete',
+            'cpmk_mata_kuliah_id'  => $pivotId,
         ];
 
         $response = $this->actingAs($this->user)
             ->postJson('/api/pemetaan-cpmk', $payload);
 
+        // 4. Asersi response dan database
         $response->assertStatus(200)
-            ->assertJson([
-                'message' => 'Pemetaan CPMK berhasil dihapus.'
-            ]);
+            ->assertJson(['message' => 'Pemetaan CPMK berhasil dihapus.']);
 
         $this->assertDatabaseMissing('cpmk_mata_kuliah', [
-            'cpmk_id'        => $cpmk1->cpmk_id,
-            'cpl_id'         => $this->mataKuliah->cpls->first()->cpl_id,
+            'cpmk_mata_kuliah_id' => $pivotId,
         ]);
     }
 }

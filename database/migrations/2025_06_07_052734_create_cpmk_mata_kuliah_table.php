@@ -12,15 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('cpmk_mata_kuliah', function (Blueprint $table) {
+            $table->id('cpmk_mata_kuliah_id');
             // $table->unsignedBigInteger('mata_kuliah_id');
             $table->unsignedBigInteger('cpmk_id');
             $table->unsignedBigInteger('cpl_id');
             $table->decimal('bobot', 5, 2)->comment('Bobot CPMK; total untuk masing-masing CPL harus ≤ bobot CPL');
             $table->timestamps();
-
-            // jika cpmk hanya dipakai di satu mata kuliah
-            // Composite primary key
-            $table->primary(['cpmk_id', 'cpl_id']);
 
             // jika cpmk dipakai berulang, maka memakai many-to-many
             // $table->primary(['mata_kuliah_id', 'cpmk_id', 'cpl_id']);

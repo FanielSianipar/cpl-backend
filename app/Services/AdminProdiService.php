@@ -8,6 +8,7 @@ use App\Models\CPMK;
 use App\Models\Kelas;
 use App\Models\Mahasiswa;
 use App\Models\MataKuliah;
+use App\Models\MataKuliahCpmkPivot;
 use App\Models\Prodi;
 use App\Models\User;
 use Exception;
@@ -978,6 +979,7 @@ class AdminProdiService
                     foreach ($mataKuliah->cpmks as $cpmk) {
                         foreach ($cpmk->cpls as $cpl) {
                             $pemetaan[] = [
+                                'cpmk_mata_kuliah_id' => $cpl->pivot->cpmk_mata_kuliah_id,
                                 'mata_kuliah_id' => $mataKuliah->mata_kuliah_id,
                                 'cpmk_id'        => $cpmk->cpmk_id,
                                 'cpl_id'         => $cpl->cpl_id,
@@ -1130,11 +1132,16 @@ class AdminProdiService
                     $cpmk->cpls()->attach($syncData);
                 }
 
-                $resultData[$cpmkId] = $cpmk->cpls->map(fn($cpl) => [
-                    'cpmk_id' => $cpl->pivot->cpmk_id,
-                    'cpl_id'  => $cpl->pivot->cpl_id,
-                    'bobot'   => $cpl->pivot->bobot,
-                ])->toArray();
+                // Tambahkan cpmk_mata_kuliah_id pada output
+                $resultData[$cpmkId] = $cpmk->cpls
+                    ->map(fn($cpl) => [
+                        'cpmk_mata_kuliah_id' => $cpl->pivot->cpmk_mata_kuliah_id,
+                        'mata_kuliah_id'      => $cpmk->mata_kuliah_id,
+                        'cpmk_id'             => $cpl->pivot->cpmk_id,
+                        'cpl_id'              => $cpl->pivot->cpl_id,
+                        'bobot'               => $cpl->pivot->bobot,
+                    ])
+                    ->toArray();
             }
 
             DB::commit();
@@ -1145,7 +1152,6 @@ class AdminProdiService
             ];
         } catch (ValidationException $ve) {
             DB::rollBack();
-            // kembalikan pesan dan errors otomatis 422
             throw $ve;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1157,25 +1163,21 @@ class AdminProdiService
 
     protected function deletePemetaanCpmk(array $data): array
     {
-        if (empty($data['cpmks']) || !is_array($data['cpmks'])) {
-            return ['message' => 'Data CPMK wajib disertakan.'];
+        // Pastikan cpmk_mata_kuliah_id dikirim
+        if (empty($data['cpmk_mata_kuliah_id'])) {
+            return ['message' => 'ID pemetaan CPMK wajib disertakan untuk delete.'];
         }
 
         DB::beginTransaction();
         try {
-            foreach ($data['cpmks'] as $item) {
-                // validasi tiap item
-                if (!isset($item['cpmk_id'], $item['cpl_id'])) {
-                    throw new \Exception('Payload cpmks tidak lengkap untuk delete.');
-                }
+            // Cari record pivot by primary key
+            $pivot = MataKuliahCpmkPivot::findOrFail($data['cpmk_mata_kuliah_id']);
 
-                $cpmk = Cpmk::where('mata_kuliah_id', $data['mata_kuliah_id'])
-                    ->findOrFail($item['cpmk_id']);
-
-                $cpmk->cpls()->detach((int)$item['cpl_id']);
-            }
+            // Hapus pivot tunggal
+            $pivot->delete();
 
             DB::commit();
+
             return ['message' => 'Pemetaan CPMK berhasil dihapus.'];
         } catch (\Exception $e) {
             DB::rollBack();

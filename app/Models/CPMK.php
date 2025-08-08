@@ -32,7 +32,8 @@ class CPMK extends Model
             'cpmk_mata_kuliah',
             'cpmk_id',
             'cpl_id'
-        )->withPivot('bobot')
+        )->withPivot('cpmk_mata_kuliah_id', 'bobot')
+            ->using(MataKuliahCpmkPivot::class)
             ->withTimestamps();
     }
 
