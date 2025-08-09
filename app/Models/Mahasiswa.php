@@ -25,7 +25,6 @@ class Mahasiswa extends Model
         'npm',
         'name',
         'angkatan',
-        'email',
         'prodi_id',
     ];
 
