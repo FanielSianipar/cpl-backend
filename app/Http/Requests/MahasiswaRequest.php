@@ -47,11 +47,6 @@ class MahasiswaRequest extends FormRequest
                 ],
                 'name'  => 'required|string|max:50',
                 'angkatan' => 'required|integer|digits:4|between:2000,' . date('Y'),
-                'email'    => [
-                    'required',
-                    'email',
-                    Rule::unique('mahasiswa', 'email')->ignore($this->input('mahasiswa_id'), 'mahasiswa_id'),
-                ],
                 'prodi_id' => 'exists:prodi,prodi_id',
             ];
         }
@@ -66,7 +61,6 @@ class MahasiswaRequest extends FormRequest
             'npm'  => 'required|string|max:10|unique:mahasiswa,npm',
             'name'  => 'required|string|max:50',
             'angkatan' => 'required|integer|digits:4|between:2000,' . date('Y'),
-            'email'    => ['required', 'email', 'unique:mahasiswa,email'],
             'prodi_id' => 'exists:prodi,prodi_id',
         ];
     }
@@ -92,9 +86,6 @@ class MahasiswaRequest extends FormRequest
             'angkatan.integer' => 'Angkatan mahasiswa harus berupa angka.',
             'angkatan.digits' => 'Angkatan mahasiswa harus terdiri dari 4 digit.',
             'angkatan.between' => 'Angkatan mahasiswa harus antara 2000 dan ' . date('Y') . '.',
-            'email.required' => 'Email mahasiswa wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'email.unique' => 'Email sudah digunakan oleh mahasiswa lain.',
             'prodi_id.exists' => 'Program studi tidak ditemukan.',
         ];
     }

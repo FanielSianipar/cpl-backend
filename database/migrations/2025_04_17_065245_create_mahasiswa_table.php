@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('npm', 15)->unique();
             $table->string('name', 50);
             $table->year('angkatan');
-            $table->string('email', 50)->unique();
             $table->unsignedBigInteger('prodi_id');
             $table->foreign('prodi_id')
                 ->references('prodi_id')

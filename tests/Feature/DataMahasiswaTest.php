@@ -61,7 +61,6 @@ class DataMahasiswaTest extends TestCase
             'npm'      => '201506444',
             'name'     => 'Nama1 Mahasiswa',
             'angkatan' => 2020,
-            'email'    => 'nama1mahasiswa@example.com',
             'prodi_id' => $this->prodi->prodi_id,
         ]);
 
@@ -69,7 +68,6 @@ class DataMahasiswaTest extends TestCase
             'npm'      => '201506555',
             'name'     => 'Nama2 Mahasiswa',
             'angkatan' => 2020,
-            'email'    => 'nama2mahasiswa@example.com',
             'prodi_id' => $this->prodi->prodi_id,
         ]);
 
@@ -97,7 +95,6 @@ class DataMahasiswaTest extends TestCase
             'npm'      => '201506999',
             'name'     => 'Nama Mahasiswa',
             'angkatan' => 2020,
-            'email'    => 'namamahasiswa@example.com',
             'prodi_id' => $this->prodi->prodi_id,
         ]);
 
@@ -116,7 +113,6 @@ class DataMahasiswaTest extends TestCase
 
         $data = $response->json('data');
         $this->assertEquals($mahasiswa->mahasiswa_id, $data['mahasiswa_id']);
-        $this->assertEquals($mahasiswa->email, $data['email']);
     }
 
     /**
@@ -129,7 +125,6 @@ class DataMahasiswaTest extends TestCase
             'npm'      => '201506999',
             'name'     => 'Store Mahasiswa',
             'angkatan' => 2020,
-            'email'    => 'storemahasiswa@example.com',
             'prodi_id' => $this->prodi->prodi_id,
         ];
 
@@ -143,7 +138,6 @@ class DataMahasiswaTest extends TestCase
 
         $this->assertDatabaseHas('mahasiswa', [
             'npm'      => '201506999',
-            'email'    => 'storemahasiswa@example.com',
             'prodi_id' => $this->prodi->prodi_id,
         ]);
     }
@@ -158,7 +152,6 @@ class DataMahasiswaTest extends TestCase
             'npm'      => '',
             'name'     => '',
             'angkatan' => '',
-            'email'    => 'invalid-email',
             'prodi_id' => '',
         ];
 
@@ -166,7 +159,7 @@ class DataMahasiswaTest extends TestCase
             ->postJson('/api/kelola-data-mahasiswa', $payload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['npm', 'name', 'angkatan', 'email', 'prodi_id']);
+            ->assertJsonValidationErrors(['npm', 'name', 'angkatan', 'prodi_id']);
     }
 
     /**
@@ -178,7 +171,6 @@ class DataMahasiswaTest extends TestCase
             'npm'      => '201506000',
             'name'     => 'Update Mahasiswa',
             'angkatan' => 2020,
-            'email'    => 'updatemahasiswa@example.com',
             'prodi_id' => $this->prodi->prodi_id,
         ]);
 
@@ -191,7 +183,6 @@ class DataMahasiswaTest extends TestCase
             'npm'         => '201506888',
             'name'        => 'Updated Mahasiswa',
             'angkatan'   => 2021,
-            'email'       => 'updatedmahasiswa@example.com',
             'prodi_id'    => $newProdi->prodi_id,
         ];
 
@@ -207,7 +198,6 @@ class DataMahasiswaTest extends TestCase
             'mahasiswa_id' => $mahasiswa->mahasiswa_id,
             'npm'      => '201506888',
             'name'     => 'Updated Mahasiswa',
-            'email'    => 'updatedmahasiswa@example.com',
             'prodi_id' => $newProdi->prodi_id,
         ]);
     }
@@ -221,7 +211,6 @@ class DataMahasiswaTest extends TestCase
             'npm'      => '201506111',
             'name'     => 'Update gagal Mahasiswa',
             'angkatan' => 2020,
-            'email'    => 'updategagalmahasiswa@example.com',
             'prodi_id' => $this->prodi->prodi_id,
         ]);
 
@@ -231,7 +220,6 @@ class DataMahasiswaTest extends TestCase
             'npm'         => '',         // Kosong agar gagal validasi
             'name'        => '',         // Kosong agar gagal validasi
             'angkatan'   => '',         // Kosong agar gagal validasi
-            'email'       => 'invalid-email', // Format email tidak valid
             'prodi_id'    => 9999,       // ID prodi tidak valid
         ];
 
@@ -239,7 +227,7 @@ class DataMahasiswaTest extends TestCase
             ->postJson('/api/kelola-data-mahasiswa', $invalidPayload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['npm', 'name', 'angkatan', 'email', 'prodi_id']);
+            ->assertJsonValidationErrors(['npm', 'name', 'angkatan', 'prodi_id']);
     }
 
     /**
@@ -251,7 +239,6 @@ class DataMahasiswaTest extends TestCase
             'npm'      => '201506222',
             'name'     => 'Delete Mahasiswa',
             'angkatan' => 2020,
-            'email'    => 'deletemahasiswa@example.com',
             'prodi_id' => $this->prodi->prodi_id,
         ]);
 

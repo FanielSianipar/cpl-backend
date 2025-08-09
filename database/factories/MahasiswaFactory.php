@@ -30,8 +30,6 @@ class MahasiswaFactory extends Factory
             'npm' => $this->faker->unique()->numerify('2015061####'),
             // Field name mahasiswa
             'name' => $this->faker->name(),
-            // Email yang unik untuk setiap mahasiswa
-            'email' => $this->faker->unique()->safeEmail(),
             // Jika tidak diberikan, factory Prodi akan membuat instance Prodi baru
             'prodi_id' => function () {
                 return Prodi::factory()->create()->prodi_id;
