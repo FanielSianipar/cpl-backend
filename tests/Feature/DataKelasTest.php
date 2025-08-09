@@ -227,6 +227,7 @@ class DataKelasTest extends TestCase
             'tahun_ajaran'   => '2026/2027',
             'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
             'dosens' => [
+                ['dosen_id' => $this->dosen1->id, 'jabatan' => 'Dosen Utama'],
                 ['dosen_id' => $this->dosen2->id, 'jabatan' => 'Pendamping Dosen 1'],
                 ['dosen_id' => $this->dosen3->id, 'jabatan' => 'Pendamping Dosen 2'],
             ]
@@ -250,10 +251,10 @@ class DataKelasTest extends TestCase
             'tahun_ajaran'   => '2026/2027',
         ]);
 
-        // Cek pivot sync: dosen1 harus hilang, dosen2 & 3 ada
-        $this->assertDatabaseMissing('kelas_dosen', [
+        $this->assertDatabaseHas('kelas_dosen', [
             'kelas_id' => $kelas->kelas_id,
-            'dosen_id' => $this->dosen1->id
+            'dosen_id' => $this->dosen1->id,
+            'jabatan'  => 'Dosen Utama'
         ]);
         $this->assertDatabaseHas('kelas_dosen', [
             'kelas_id' => $kelas->kelas_id,

@@ -12,13 +12,14 @@ return new class extends Migration
     public function up()
     {
         Schema::create('kelas_dosen', function (Blueprint $table) {
-            // composite PK: satu dosen hanya satu role per kelas
+            $table->id('kelas_dosen_id'); // primary key
             $table->unsignedBigInteger('kelas_id');
             $table->unsignedBigInteger('dosen_id');
             $table->enum('jabatan', ['Dosen Utama', 'Pendamping Dosen 1', 'Pendamping Dosen 2']);
+            $table->unique(['kelas_id', 'jabatan'], 'kelas_jabatan_unique');
             $table->timestamps();
 
-            $table->primary(['kelas_id', 'dosen_id']);
+            // $table->primary(['kelas_id', 'dosen_id']);
 
             $table->foreign('kelas_id')
                 ->references('kelas_id')
