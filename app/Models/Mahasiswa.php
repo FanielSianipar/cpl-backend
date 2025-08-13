@@ -32,4 +32,11 @@ class Mahasiswa extends Model
     {
         return $this->belongsTo(Prodi::class, 'prodi_id', 'prodi_id');
     }
+
+    public function kelasDiikuti()
+    {
+        return $this->belongsToMany(Kelas::class, 'kelas_mahasiswa', 'mahasiswa_id', 'kelas_id')
+            ->withPivot('kelas_mahasiswa_id')
+            ->withTimestamps();
+    }
 }

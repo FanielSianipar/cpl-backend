@@ -83,6 +83,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/kelola-data-kelas', [AdminProdiController::class, 'kelolaDataKelas']);
         Route::delete('/kelola-data-kelas', [AdminProdiController::class, 'kelolaDataKelas']);
     });
+    // Mendaftarkan mahasiswa ke kelas
+    Route::middleware(['role:Admin Prodi', 'permission:Mendaftarkan mahasiswa ke kelas'])->group(function () {
+        Route::get('/daftar-mahasiswa-ke-kelas', [AdminProdiController::class, 'daftarMahasiswaKeKelas']);
+        Route::post('/daftar-mahasiswa-ke-kelas', [AdminProdiController::class, 'daftarMahasiswaKeKelas']);
+        Route::put('/daftar-mahasiswa-ke-kelas', [AdminProdiController::class, 'daftarMahasiswaKeKelas']);
+        Route::delete('/daftar-mahasiswa-ke-kelas', [AdminProdiController::class, 'daftarMahasiswaKeKelas']);
+    });
     // Kelola data cpl
     Route::middleware(['role:Admin Prodi', 'permission:Mengelola data CPL'])->group(function () {
         Route::get('/kelola-data-cpl', [AdminProdiController::class, 'kelolaDataCpl']);

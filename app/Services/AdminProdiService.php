@@ -579,6 +579,147 @@ class AdminProdiService
         }
     }
 
+    public function daftarMahasiswaKeKelas(array $data): array
+    {
+        $action = $data['action'] ?? null;
+
+        try {
+            switch ($action) {
+                case 'view':
+                    // 1. Detail seorang mahasiswa
+                    if (!empty($data['mahasiswa_id'])) {
+                        $mahasiswa = Mahasiswa::with('kelasDiikuti')
+                            ->findOrFail($data['mahasiswa_id']);
+
+                        return [
+                            'data'    => $mahasiswa,
+                            'message' => 'Detail mahasiswa berhasil diambil.'
+                        ];
+                    }
+
+                    // 2. Daftar semua mahasiswa di satu kelas
+                    if (!empty($data['kelas_id'])) {
+                        $kelas = Kelas::with([
+                            'mahasiswas' => function ($q) {
+                                // pastikan kolom dipilih dari tabel mahasiswa
+                                $q->select([
+                                    'mahasiswa.mahasiswa_id',
+                                    'mahasiswa.npm',
+                                    'mahasiswa.name',
+                                    'mahasiswa.angkatan',
+                                    'mahasiswa.prodi_id'
+                                ]);
+                            }
+                        ])->findOrFail($data['kelas_id']);
+
+                        return [
+                            'data'    => $kelas->mahasiswas,
+                            'message' => 'Daftar mahasiswa di kelas berhasil diambil.'
+                        ];
+                    }
+
+                    throw new \InvalidArgumentException(
+                        'Untuk view, sertakan mahasiswa_id atau kelas_id.'
+                    );
+
+                case 'store':
+                    $kelas = Kelas::findOrFail($data['kelas_id']);
+
+                    // Mulai transaksi untuk konsistensi pivot
+                    $results = DB::transaction(function () use ($data, $kelas) {
+                        $mahasiswaBaru = [];
+
+                        foreach ($data['mahasiswas'] as $item) {
+                            // Cek apakah sudah ada di tabel mahasiswa
+                            $mahasiswa = Mahasiswa::where('npm', $item['npm'])->first();
+
+                            if (!$mahasiswa) {
+                                $angkatan = substr($item['npm'], 0, 2);
+
+                                $mahasiswa = Mahasiswa::create([
+                                    'npm'      => $item['npm'],
+                                    'name'     => $item['name'],
+                                    'angkatan' => $angkatan,
+                                    'prodi_id' => auth()->user()->prodi_id,
+                                ]);
+                            }
+
+                            // Attach ke kelas hanya jika belum terdaftar
+                            if (!$kelas->mahasiswas()
+                                ->where('mahasiswa_id', $mahasiswa->mahasiswa_id)
+                                ->exists()) {
+                                $kelas->mahasiswas()->attach($mahasiswa->mahasiswa_id);
+                            }
+
+                            $mahasiswaBaru[] = $mahasiswa->load('kelasDiikuti');
+                        }
+
+                        return $mahasiswaBaru;
+                    });
+
+                    return [
+                        'data'    => $results,
+                        'message' => 'Mahasiswa berhasil didaftarkan.'
+                    ];
+
+                case 'update':
+                    // Update data mahasiswa
+                    $mahasiswa = Mahasiswa::findOrFail($data['mahasiswa_id']);
+                    $npm  = $data['npm'] ?? $mahasiswa->npm;
+
+                    $mahasiswa->update([
+                        'npm'      => $npm,
+                        'name'     => $data['name']      ?? $mahasiswa->name,
+                        'angkatan' => substr($npm, 0, 2),
+                    ]);
+
+                    // Opsional register ke kelas baru
+                    if (!empty($data['kelas_id'])) {
+                        $kelas = Kelas::findOrFail($data['kelas_id']);
+                        $kelas->mahasiswas()
+                            ->syncWithoutDetaching([$mahasiswa->mahasiswa_id]);
+                    }
+
+                    return [
+                        'data'    => $mahasiswa->load('kelasDiikuti'),
+                        'message' => 'Data mahasiswa berhasil diperbarui.'
+                    ];
+
+                case 'delete':
+                    // 1. Validasi parameter
+                    if (empty($data['kelas_id']) || empty($data['mahasiswa_id'])) {
+                        return ['message' => 'Parameter kelas_id dan mahasiswa_id diperlukan untuk delete.'];
+                    }
+
+                    // 2. Load Kelas
+                    $kelas = Kelas::findOrFail($data['kelas_id']);
+
+                    // 3. Cek apakah mahasiswa masih terdaftar
+                    $terdaftar = $kelas->mahasiswas()
+                        ->wherePivot('mahasiswa_id', $data['mahasiswa_id'])
+                        ->exists();
+
+                    if (!$terdaftar) {
+                        return [
+                            'message' => 'Mahasiswa tidak terdaftar di kelas ini.'
+                        ];
+                    }
+
+                    // 4. Detach pivot
+                    $kelas->mahasiswas()->detach($data['mahasiswa_id']);
+
+                    return [
+                        'message' => 'Mahasiswa berhasil dikeluarkan dari kelas.'
+                    ];
+
+                default:
+                    throw new \BadMethodCallException("Aksi tidak valid: {$action}");
+            }
+        } catch (\Exception $e) {
+            return ['message' => 'Terjadi kesalahan: ' . $e->getMessage()];
+        }
+    }
+
     public function kelolaDataCpl(array $data): array
     {
         $action = $data['action'] ?? null;

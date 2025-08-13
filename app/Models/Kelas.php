@@ -50,6 +50,12 @@ class Kelas extends Model
         return $this->dosens()->wherePivot('jabatan', 'Pendamping Dosen 2');
     }
 
+    public function mahasiswas()
+    {
+        return $this->belongsToMany(Mahasiswa::class, 'kelas_mahasiswa', 'kelas_id', 'mahasiswa_id')
+            ->withPivot('kelas_mahasiswa_id')
+            ->withTimestamps();
+    }
 
     public function subPenilaian()
     {
