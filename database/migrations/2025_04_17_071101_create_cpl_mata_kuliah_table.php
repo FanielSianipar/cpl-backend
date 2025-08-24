@@ -22,10 +22,6 @@ return new class extends Migration
             $table->foreign('mata_kuliah_id')
                 ->references('mata_kuliah_id')->on('mata_kuliah')
                 ->onDelete('cascade');
-
-            $table->foreign('cpl_id')
-                ->references('cpl_id')->on('cpl')
-                ->onDelete('cascade');
         });
     }
 

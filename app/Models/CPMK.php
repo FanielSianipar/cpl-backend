@@ -4,14 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class CPMK extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'cpmk_id';
-
     protected $table = 'cpmk';
+
+    protected $primaryKey = 'cpmk_id';
 
     protected $fillable = [
         'kode_cpmk',
@@ -21,46 +23,33 @@ class CPMK extends Model
     ];
 
     // jika cpmk hanya dipakai di satu mata kuliah
-    public function mataKuliah()
+    public function mataKuliah(): BelongsTo
     {
-        return $this->belongsTo(MataKuliah::class, 'mata_kuliah_id', 'mata_kuliah_id');
+        return $this->belongsTo(
+            MataKuliah::class,
+            'mata_kuliah_id',
+            'mata_kuliah_id'
+        );
     }
+
     public function cpls()
     {
-        return $this->belongsToMany(
-            CPL::class,
-            'cpmk_mata_kuliah',
-            'cpmk_id',
-            'cpl_id'
-        )->withPivot('cpmk_mata_kuliah_id', 'bobot')
+        return $this->belongsToMany(CPL::class, 'cpmk_mata_kuliah', 'cpmk_id', 'cpl_id')
             ->using(MataKuliahCpmkPivot::class)
+            ->withPivot('cpmk_mata_kuliah_id', 'bobot')
             ->withTimestamps();
     }
 
-    // jika cpmk dipakai berulang, maka memakai many-to-many
-    // public function prodi()
-    // {
-    //     return $this->belongsTo(Prodi::class, 'prodi_id', 'prodi_id');
-    // }
-    /**
-     * Relasi many-to-many ke Mata Kuliah.
-     */
-    // public function mataKuliahs()
-    // {
-    //     return $this->belongsToMany(MataKuliah::class, 'cpmk_mata_kuliah', 'cpmk_id', 'mata_kuliah_id')
-    //         ->withPivot('bobot', 'cpl_id')
-    //         ->withTimestamps();
-    // }
-
-    public function subPenilaian()
+    public function subPenilaians(): BelongsToMany
     {
         return $this->belongsToMany(
             SubPenilaian::class,
-            'sub_penilaian_cpmk_mk',
-            'cpmk_id',
-            'sub_penilaian_id'
+            'sub_penilaian_cpmk_mata_kuliah',
+            'sub_penilaian_id',
+            'cpmk_id'
         )
-            ->withPivot(['mata_kuliah_id', 'cpl_id', 'bobot'])
+            ->using(SubPenilaianCpmkMataKuliah::class)
+            ->withPivot(['sub_penilaian_cpmk_mata_kuliah_id', 'bobot'])
             ->withTimestamps();
     }
 }

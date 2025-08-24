@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Scopes\ProdiScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class CPL extends Model
 {
@@ -36,10 +37,22 @@ class CPL extends Model
     /**
      * Relasi many-to-many ke Mata Kuliah.
      */
-    public function mataKuliahs()
+    public function mataKuliahs(): BelongsToMany
     {
-        return $this->belongsToMany(MataKuliah::class, 'cpl_mata_kuliah', 'cpl_id', 'mata_kuliah_id')
-            ->withPivot('cpl_mata_kuliah_id', 'bobot')
+        return $this->belongsToMany(
+            MataKuliah::class,
+            'cpl_mata_kuliah',
+            'cpl_id',
+            'mata_kuliah_id'
+        )
+            ->withPivot('bobot')
+            ->withTimestamps();
+    }
+
+    public function cpmks()
+    {
+        return $this->belongsToMany(CPMK::class, 'cpmk_mata_kuliah')
+            ->withPivot('bobot')
             ->withTimestamps();
     }
 }

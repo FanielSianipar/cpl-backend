@@ -27,7 +27,7 @@ class MataKuliahFactory extends Factory
     {
         return [
             // Misalnya kode mata kuliah menggunakan pola 'kode_mk####' yang unik
-            'kode_mata_kuliah' => $this->faker->unique()->bothify('kode_mk####'),
+            'kode_mata_kuliah' => $this->faker->unique()->regexify('MK[0-9]{3}'),
             // Field nama mata kuliah
             'nama_mata_kuliah' => $this->faker->words(3, true),
             // Jika tidak diberikan, factory Prodi akan membuat instance Prodi baru

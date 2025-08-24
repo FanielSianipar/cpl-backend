@@ -13,17 +13,10 @@ return new class extends Migration
     {
         Schema::create('cpmk_mata_kuliah', function (Blueprint $table) {
             $table->id('cpmk_mata_kuliah_id');
-            // $table->unsignedBigInteger('mata_kuliah_id');
             $table->unsignedBigInteger('cpmk_id');
             $table->unsignedBigInteger('cpl_id');
             $table->decimal('bobot', 5, 2)->comment('Bobot CPMK; total untuk masing-masing CPL harus ≤ bobot CPL');
             $table->timestamps();
-
-            // jika cpmk dipakai berulang, maka memakai many-to-many
-            // $table->primary(['mata_kuliah_id', 'cpmk_id', 'cpl_id']);
-            // $table->foreign('mata_kuliah_id')
-            //     ->references('mata_kuliah_id')->on('mata_kuliah')
-            //     ->onDelete('cascade');
 
             $table->foreign('cpmk_id')
                 ->references('cpmk_id')->on('cpmk')

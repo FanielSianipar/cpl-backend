@@ -10,12 +10,12 @@ class MataKuliahCpmkPivot extends Pivot
 
     protected $primaryKey = 'cpmk_mata_kuliah_id';
 
-    public function subPenilaians()
-    {
-        return $this->hasMany(SubPenilaianCpmkMataKuliah::class, [
-            'mata_kuliah_id',
-            'cpmk_id',
-            'cpl_id'
-        ]);
-    }
+    // public function subPenilaians()
+    // {
+    //     return $this->hasMany(SubPenilaianCpmkMataKuliah::class, [
+    //         'mata_kuliah_id',
+    //         'cpmk_id',
+    //         'cpl_id'
+    //     ]);
+    // }
 }

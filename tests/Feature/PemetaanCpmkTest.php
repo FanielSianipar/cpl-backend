@@ -92,39 +92,38 @@ class PemetaanCpmkTest extends TestCase
      */
     public function test_view_all_pemetaan_cpmk(): void
     {
-        // Buat beberapa data CPMK dan mapping-nya via pivot
-        $cpmk1 = Cpmk::factory()->create([
-            'kode_cpmk' => 'kcpmk1',
-            'nama_cpmk' => 'cpmk1',
-            'deskripsi' => 'deskripsi cpmk1',
-            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id
+        // Ambil daftar cpl_id yang sudah di‐sync di setUp()
+        $cplList = $this->mataKuliah->cpls->pluck('cpl_id')->all();
+
+        // Buat 3 CPMK untuk mata kuliah ini
+        $cpmk1 = CPMK::factory()->create([
+            'kode_cpmk'      => 'kcpmk1',
+            'nama_cpmk'      => 'cpmk1',
+            'deskripsi'      => 'deskripsi cpmk1',
+            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
         ]);
-        $cpmk2 = Cpmk::factory()->create([
-            'kode_cpmk' => 'kcpmk2',
-            'nama_cpmk' => 'cpmk2',
-            'deskripsi' => 'deskripsi cpmk2',
-            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id
+        $cpmk2 = CPMK::factory()->create([
+            'kode_cpmk'      => 'kcpmk2',
+            'nama_cpmk'      => 'cpmk2',
+            'deskripsi'      => 'deskripsi cpmk2',
+            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
         ]);
-        $cpmk3 = Cpmk::factory()->create([
-            'kode_cpmk' => 'kcpmk3',
-            'nama_cpmk' => 'cpmk3',
-            'deskripsi' => 'deskripsi cpmk3',
-            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id
+        $cpmk3 = CPMK::factory()->create([
+            'kode_cpmk'      => 'kcpmk3',
+            'nama_cpmk'      => 'cpmk3',
+            'deskripsi'      => 'deskripsi cpmk3',
+            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
         ]);
 
-        // Siapkan data sinkronisasi pivot; key berdasarkan cpmk_id
-        // Contoh: petakan CPMK1 ke CPL1, CPMK2 ke CPL1, dan CPMK3 ke CPL2
-        $syncData = [
-            $cpmk1->cpmk_id => ['cpl_id' => $this->mataKuliah->cpls()->first()->cpl_id, 'bobot' => 25.00],
-            $cpmk2->cpmk_id => ['cpl_id' => $this->mataKuliah->cpls()->first()->cpl_id, 'bobot' => 25.00],
-            $cpmk3->cpmk_id => ['cpl_id' => $this->mataKuliah->cpls()->get()[1]->cpl_id, 'bobot' => 50.00],
-        ];
-        foreach ($syncData as $cpmkId => $pivot) {
-            CPMK::find($cpmkId)
-                ->cpls()
-                ->attach([$pivot['cpl_id'] => ['bobot' => $pivot['bobot']]]);
-        }
+        // Mapping CPMK → CPL via pivot cpmk_mata_kuliah
+        // Dua CPMK pertama terkait ke CPL pertama (total 25% + 25% = 50%)
+        $cpmk1->cpls()->attach($cplList[0], ['bobot' => 25.00]);
+        $cpmk2->cpls()->attach($cplList[0], ['bobot' => 25.00]);
 
+        // CPMK ketiga terkait ke CPL kedua (50%)
+        $cpmk3->cpls()->attach($cplList[1], ['bobot' => 50.00]);
+
+        // Panggil endpoint view
         $payload = [
             'action'         => 'view',
             'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
@@ -133,12 +132,30 @@ class PemetaanCpmkTest extends TestCase
         $response = $this->actingAs($this->user)
             ->postJson('/api/pemetaan-cpmk', $payload);
 
+        // Pastikan status & struktur JSON
         $response->assertStatus(200)
             ->assertJson([
                 'message' => 'Data pemetaan CPMK berhasil diambil.'
+            ])
+            ->assertJsonCount(3, 'data')
+            ->assertJsonStructure([
+                'data' => [
+                    '*' => [
+                        'cpmk_mata_kuliah_id',
+                        'mata_kuliah_id',
+                        'cpmk_id',
+                        'cpl_id',
+                        'bobot',
+                    ]
+                ]
             ]);
 
-        $this->assertIsArray($response->json('data'));
+        // Pilihan tambahan: cek bahwa setiap mapping benar
+        $all = $response->json('data');
+        $this->assertEquals(25.00, collect($all)
+            ->where('cpmk_id', $cpmk1->cpmk_id)->first()['bobot']);
+        $this->assertEquals(50.00, collect($all)
+            ->where('cpmk_id', $cpmk3->cpmk_id)->first()['bobot']);
     }
 
     /**
@@ -189,15 +206,15 @@ class PemetaanCpmkTest extends TestCase
     {
         // Buat data CPMK
         $cpmk1 = CPMK::factory()->create([
-            'kode_cpmk' => 'kcpmkB',
-            'nama_cpmk' => 'cpmkBerhasil',
-            'deskripsi' => 'deskripsi cpmkBerhasil',
+            'kode_cpmk'      => 'kcpmkB',
+            'nama_cpmk'      => 'cpmkBerhasil',
+            'deskripsi'      => 'deskripsi cpmkBerhasil',
             'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
         ]);
         $cpmk2 = CPMK::factory()->create([
-            'kode_cpmk' => 'kcpmkB2',
-            'nama_cpmk' => 'cpmkBerhasil2',
-            'deskripsi' => 'deskripsi cpmkBerhasil2',
+            'kode_cpmk'      => 'kcpmkB2',
+            'nama_cpmk'      => 'cpmkBerhasil2',
+            'deskripsi'      => 'deskripsi cpmkBerhasil2',
             'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
         ]);
 
@@ -205,8 +222,16 @@ class PemetaanCpmkTest extends TestCase
             'action'         => 'store',
             'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
             'cpmks'          => [
-                ['cpmk_id' => $cpmk1->cpmk_id, 'cpl_id' => $this->mataKuliah->cpls()->first()->cpl_id, 'bobot' => 50.00],
-                ['cpmk_id' => $cpmk2->cpmk_id, 'cpl_id' => $this->mataKuliah->cpls()->get()->last()->cpl_id, 'bobot' => 50.00],
+                [
+                    'cpmk_id' => $cpmk1->cpmk_id,
+                    'cpl_id'  => $this->mataKuliah->cpls()->first()->cpl_id,
+                    'bobot'   => 25.00,
+                ],
+                [
+                    'cpmk_id' => $cpmk2->cpmk_id,
+                    'cpl_id'  => $this->mataKuliah->cpls()->latest('cpl_id')->first()->cpl_id,
+                    'bobot'   => 25.00,
+                ],
             ],
         ];
 
@@ -216,13 +241,26 @@ class PemetaanCpmkTest extends TestCase
         $response->assertStatus(201)
             ->assertJson([
                 'message' => 'Pemetaan CPMK berhasil ditambahkan.'
+            ])
+            ->assertJsonCount(2, 'data')      // dua mapping
+            ->assertJsonStructure([
+                'data' => [
+                    '*' => [                 // setiap element:
+                        'cpmk_mata_kuliah_id',
+                        'mata_kuliah_id',
+                        'cpmk_id',
+                        'cpl_id',
+                        'bobot',
+                    ]
+                ]
             ]);
 
+        // Cek database
         foreach ($payload['cpmks'] as $item) {
             $this->assertDatabaseHas('cpmk_mata_kuliah', [
-                'cpmk_id'        => $item['cpmk_id'],
-                'cpl_id'         => $item['cpl_id'],
-                'bobot'          => $item['bobot'],
+                'cpmk_id' => $item['cpmk_id'],
+                'cpl_id'  => $item['cpl_id'],
+                'bobot'   => $item['bobot'],
             ]);
         }
     }
@@ -252,8 +290,8 @@ class PemetaanCpmkTest extends TestCase
             'action'         => 'store',
             'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
             'cpmks'          => [
-                ['cpmk_id' => $cpmk1->cpmk_id, 'cpl_id' => $this->mataKuliah->cpls->first()->cpl_id, 'bobot' => 30.00],
-                ['cpmk_id' => $cpmk2->cpmk_id, 'cpl_id' => $this->mataKuliah->cpls->first()->cpl_id, 'bobot' => 30.00],
+                ['cpmk_id' => $cpmk1->cpmk_id, 'cpl_id' => $this->mataKuliah->cpls->first()->cpl_id, 'bobot' => 100.00],
+                ['cpmk_id' => $cpmk2->cpmk_id, 'cpl_id' => $this->mataKuliah->cpls->first()->cpl_id, 'bobot' => 25.00],
             ],
         ];
 
@@ -284,9 +322,6 @@ class PemetaanCpmkTest extends TestCase
             'deskripsi' => 'deskripsi Update2',
             'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id
         ]);
-        // $this->mataKuliah->cpmks()->sync([
-        //     $cpmk1->cpmk_id => ['cpl_id' => $this->mataKuliah->cpls->first()->cpl_id, 'bobot' => 50.00],
-        // ]);
 
         // Payload update: ubah bobot sehingga total CPMK untuk CPL tersebut menjadi 30 + 20 = 50 (valid)
         $payload = [

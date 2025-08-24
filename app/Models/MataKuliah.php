@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Scopes\ProdiScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MataKuliah extends Model
 {
@@ -40,17 +42,25 @@ class MataKuliah extends Model
     /**
      * Relasi many-to-many ke CPL dengan pivot (dengan bobot).
      */
-    public function cpls()
+    public function cpls(): BelongsToMany
     {
-        return $this->belongsToMany(CPL::class, 'cpl_mata_kuliah', 'mata_kuliah_id', 'cpl_id')
-            ->withPivot('cpl_mata_kuliah_id', 'bobot')
+        return $this->belongsToMany(
+            CPL::class,
+            'cpl_mata_kuliah',
+            'mata_kuliah_id',
+            'cpl_id'
+        )
+            ->withPivot('bobot')
             ->withTimestamps();
     }
 
-    // jika cpmk hanya dipakai di satu mata kuliah
-    public function cpmks()
+    public function cpmks(): HasMany
     {
-        return $this->hasMany(CPMK::class, 'mata_kuliah_id', 'mata_kuliah_id');
+        return $this->hasMany(
+            CPMK::class,
+            'mata_kuliah_id',
+            'mata_kuliah_id'
+        );
     }
 
     // jika cpmk dipakai berulang, maka memakai many-to-many
