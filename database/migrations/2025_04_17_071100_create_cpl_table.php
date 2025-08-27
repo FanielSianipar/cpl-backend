@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('cpl', function (Blueprint $table) {
             $table->id('cpl_id');
             $table->string('kode_cpl', 10);
-            $table->string('nama_cpl', 50);
             $table->text('deskripsi');
             $table->unsignedBigInteger('prodi_id');
             $table->foreign('prodi_id')

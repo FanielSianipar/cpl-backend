@@ -24,7 +24,6 @@ class CPL extends Model
 
     protected $fillable = [
         'kode_cpl',
-        'nama_cpl',
         'deskripsi',
         'prodi_id',
     ];

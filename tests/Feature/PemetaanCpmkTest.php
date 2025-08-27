@@ -71,13 +71,11 @@ class PemetaanCpmkTest extends TestCase
         // Pastikan Mata Kuliah memiliki CPL yang valid
         $cpl1 = CPL::factory()->create([
             'kode_cpl' => 'CPL100',
-            'nama_cpl' => 'CPL Matematika',
             'deskripsi' => 'CPL untuk Matematika Dasar',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl2 = CPL::factory()->create([
             'kode_cpl' => 'CPL200',
-            'nama_cpl' => 'CPL Lanjutan',
             'deskripsi' => 'CPL untuk Matematika Lanjutan',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);

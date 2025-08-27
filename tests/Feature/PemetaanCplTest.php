@@ -69,19 +69,16 @@ class PemetaanCplTest extends TestCase
         // Buat beberapa data CPL
         $cpl1 = Cpl::factory()->create([
             'kode_cpl' => 'CPL100',
-            'nama_cpl' => 'CPL 1',
             'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl2 = Cpl::factory()->create([
             'kode_cpl' => 'CPL200',
-            'nama_cpl' => 'CPL 2',
             'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl3 = Cpl::factory()->create([
             'kode_cpl' => 'CPL300',
-            'nama_cpl' => 'CPL 3',
             'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
@@ -118,7 +115,6 @@ class PemetaanCplTest extends TestCase
     {
         $cpl = Cpl::factory()->create([
             'kode_cpl' => 'CPL400',
-            'nama_cpl' => 'CPL Detail',
             'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
@@ -155,19 +151,16 @@ class PemetaanCplTest extends TestCase
         // Persiapkan data CPL untuk mapping
         $cpl1 = Cpl::factory()->create([
             'kode_cpl' => 'CPL101',
-            'nama_cpl' => 'CPL 1',
             'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl2 = Cpl::factory()->create([
             'kode_cpl' => 'CPL102',
-            'nama_cpl' => 'CPL 2',
             'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl3 = Cpl::factory()->create([
             'kode_cpl' => 'CPL103',
-            'nama_cpl' => 'CPL 3',
             'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
@@ -206,13 +199,11 @@ class PemetaanCplTest extends TestCase
     {
         $cpl1 = Cpl::factory()->create([
             'kode_cpl' => 'CPL501',
-            'nama_cpl' => 'CPL Gagal 1',
             'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl2 = Cpl::factory()->create([
             'kode_cpl' => 'CPL502',
-            'nama_cpl' => 'CPL Gagal 2',
             'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
@@ -243,13 +234,11 @@ class PemetaanCplTest extends TestCase
     {
         $cpl1 = Cpl::factory()->create([
             'kode_cpl' => 'CPL201',
-            'nama_cpl' => 'CPL 1',
             'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl2 = Cpl::factory()->create([
             'kode_cpl' => 'CPL202',
-            'nama_cpl' => 'CPL 2',
             'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
@@ -295,13 +284,11 @@ class PemetaanCplTest extends TestCase
     {
         $cpl1 = Cpl::factory()->create([
             'kode_cpl' => 'CPL601',
-            'nama_cpl' => 'CPL Update Gagal 1',
             'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
         $cpl2 = Cpl::factory()->create([
             'kode_cpl' => 'CPL602',
-            'nama_cpl' => 'CPL Update Gagal 2',
             'deskripsi' => 'deskripsi',
             'prodi_id' => $this->mataKuliah->prodi_id,
         ]);
@@ -336,13 +323,11 @@ class PemetaanCplTest extends TestCase
     {
         $cpl1 = Cpl::factory()->create([
             'kode_cpl'  => 'CPL301',
-            'nama_cpl'  => 'CPL 1',
             'deskripsi' => 'deskripsi',
             'prodi_id'  => $this->mataKuliah->prodi_id,
         ]);
         $cpl2 = Cpl::factory()->create([
             'kode_cpl'  => 'CPL302',
-            'nama_cpl'  => 'CPL 2',
             'deskripsi' => 'deskripsi',
             'prodi_id'  => $this->mataKuliah->prodi_id,
         ]);

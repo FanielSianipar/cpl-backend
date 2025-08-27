@@ -729,7 +729,7 @@ class AdminProdiService
                         $cpl = CPL::with(['Prodi' => function ($query) {
                             $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
                         }])
-                            ->select('cpl_id', 'kode_cpl', 'nama_cpl', 'deskripsi', 'prodi_id')
+                            ->select('cpl_id', 'kode_cpl', 'deskripsi', 'prodi_id')
                             ->findOrFail($data['cpl_id']);
                         return [
                             'data'    => $cpl,
@@ -739,7 +739,7 @@ class AdminProdiService
                         $cpls = CPL::with(['prodi' => function ($query) {
                             $query->select('prodi_id', 'kode_prodi', 'nama_prodi');
                         }])
-                            ->select('cpl_id', 'kode_cpl', 'nama_cpl', 'deskripsi', 'prodi_id')
+                            ->select('cpl_id', 'kode_cpl', 'deskripsi', 'prodi_id')
                             ->get();
                         return [
                             'data'    => $cpls,
@@ -753,7 +753,6 @@ class AdminProdiService
                     DB::beginTransaction();
                     $cpl = CPL::create([
                         'kode_cpl'      => $data['kode_cpl'],
-                        'nama_cpl'     => $data['nama_cpl'],
                         'deskripsi'     => $data['deskripsi'],
                         'prodi_id' => auth()->user()->prodi_id,
                     ]);
@@ -776,7 +775,6 @@ class AdminProdiService
 
                     $cpl->update([
                         'kode_cpl'     => $data['kode_cpl']     ?? $cpl->kode_cpl,
-                        'nama_cpl'     => $data['nama_cpl']     ?? $cpl->nama_cpl,
                         'deskripsi'     => $data['deskripsi']     ?? $cpl->deskripsi,
                     ]);
                     $cpl = $cpl->fresh('prodi');
@@ -1028,8 +1026,8 @@ class AdminProdiService
                 $dupes = array_intersect($existingIds, $inputIds);
                 if (!empty($dupes)) {
                     // Ambil nama CPL berdasarkan ID yang duplikat
-                    $dupeNames = Cpl::whereIn('cpl_id', $dupes)
-                        ->pluck('nama_cpl')
+                    $dupeNames = CPL::whereIn('cpl_id', $dupes)
+                        ->pluck('kode_cpl')
                         ->toArray();
 
                     // Format pesannya

@@ -28,8 +28,6 @@ class CplFactory extends Factory
         return [
             // Misalnya kode CPL menggunakan pola 'k_cpl####' yang unik
             'kode_cpl' => $this->faker->unique()->numerify('k_cpl####'),
-            // Field nama CPL
-            'nama_cpl' => $this->faker->words(3, true),
             // Deskripsi CPL
             'deskripsi' => $this->faker->paragraph(),
             // Jika tidak diberikan, factory Prodi akan membuat instance Prodi baru

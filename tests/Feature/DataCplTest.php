@@ -57,14 +57,12 @@ class DataCplTest extends TestCase
     {
         Cpl::factory()->create([
             'kode_cpl' => 'CPL444',
-            'nama_cpl' => 'Nama1 CPL',
             'deskripsi' => 'Deskripsi1 CPL',
             'prodi_id' => $this->user->prodi_id,
         ]);
 
         Cpl::factory()->create([
             'kode_cpl' => 'CPL555',
-            'nama_cpl' => 'Nama2 CPL',
             'deskripsi' => 'Deskripsi2 CPL',
             'prodi_id' => $this->user->prodi_id,
         ]);
@@ -91,7 +89,6 @@ class DataCplTest extends TestCase
     {
         $cpl = Cpl::factory()->create([
             'kode_cpl' => 'CPL999',
-            'nama_cpl' => 'Nama CPL',
             'deskripsi' => 'Deskripsi CPL',
             'prodi_id' => $this->user->prodi_id,
         ]);
@@ -122,7 +119,6 @@ class DataCplTest extends TestCase
         $payload = [
             'action' => 'store',
             'kode_cpl' => 'CPL999',
-            'nama_cpl' => 'Store CPL',
             'deskripsi' => 'Deskripsi Store CPL',
             'prodi_id' => $this->user->prodi_id,
         ];
@@ -149,7 +145,6 @@ class DataCplTest extends TestCase
         $payload = [
             'action' => 'store',
             'kode_cpl' => '',
-            'nama_cpl' => '',
             'deskripsi' => '',
             'prodi_id' => '',
         ];
@@ -158,7 +153,7 @@ class DataCplTest extends TestCase
             ->postJson('/api/kelola-data-cpl', $payload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['kode_cpl', 'nama_cpl', 'prodi_id']);
+            ->assertJsonValidationErrors(['kode_cpl', 'prodi_id']);
     }
 
     /**
@@ -168,7 +163,6 @@ class DataCplTest extends TestCase
     {
         $cpl = Cpl::factory()->create([
             'kode_cpl' => 'CPL000',
-            'nama_cpl' => 'Update CPL',
             'deskripsi' => 'Deskripsi Update CPL',
             'prodi_id' => $this->user->prodi_id,
         ]);
@@ -177,7 +171,6 @@ class DataCplTest extends TestCase
             'action' => 'update',
             'cpl_id' => $cpl->cpl_id,
             'kode_cpl' => 'CPL888',
-            'nama_cpl' => 'Updated CPL',
             'deskripsi' => 'Deskripsi Updated CPL',
         ];
 
@@ -192,7 +185,6 @@ class DataCplTest extends TestCase
         $this->assertDatabaseHas('cpl', [
             'cpl_id' => $cpl->cpl_id,
             'kode_cpl' => 'CPL888',
-            'nama_cpl' => 'Updated CPL',
             'deskripsi' => 'Deskripsi Updated CPL',
         ]);
     }
@@ -204,7 +196,6 @@ class DataCplTest extends TestCase
     {
         $cpl = Cpl::factory()->create([
             'kode_cpl' => 'CPL111',
-            'nama_cpl' => 'Update gagal CPL',
             'deskripsi' => 'Deskripsi Update gagal CPL',
             'prodi_id' => $this->user->prodi_id,
         ]);
@@ -213,7 +204,6 @@ class DataCplTest extends TestCase
             'action' => 'update',
             'cpl_id' => $cpl->cpl_id,
             'kode_cpl' => '',         // Kosong agar gagal validasi
-            'nama_cpl' => '',         // Kosong agar gagal validasi
             'deskripsi' => '',        // Kosong agar gagal validasi
             'prodi_id' => 9999,       // ID prodi tidak valid
         ];
@@ -222,7 +212,7 @@ class DataCplTest extends TestCase
             ->postJson('/api/kelola-data-cpl', $invalidPayload);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['kode_cpl', 'nama_cpl', 'prodi_id']);
+            ->assertJsonValidationErrors(['kode_cpl', 'prodi_id']);
     }
 
     /**
@@ -232,7 +222,6 @@ class DataCplTest extends TestCase
     {
         $cpl = Cpl::factory()->create([
             'kode_cpl' => 'CPL222',
-            'nama_cpl' => 'Delete CPL',
             'deskripsi' => 'Deskripsi Delete CPL',
             'prodi_id' => $this->user->prodi_id,
         ]);
