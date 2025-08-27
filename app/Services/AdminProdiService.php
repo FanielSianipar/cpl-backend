@@ -645,11 +645,8 @@ class AdminProdiService
                             }
 
                             // Attach ke kelas hanya jika belum terdaftar
-                            if (!$kelas->mahasiswas()
-                                ->where('mahasiswa_id', $mahasiswa->mahasiswa_id)
-                                ->exists()) {
-                                $kelas->mahasiswas()->attach($mahasiswa->mahasiswa_id);
-                            }
+                            $kelas->mahasiswas()
+                                ->syncWithoutDetaching([$mahasiswa->mahasiswa_id]);
 
                             $mahasiswaBaru[] = $mahasiswa->load('kelasDiikuti');
                         }
