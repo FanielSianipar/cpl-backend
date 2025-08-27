@@ -16,6 +16,12 @@ class ProdiSeeder extends Seeder
         // Mengambil semua fakultas dari database
         $fakultases = Fakultas::all();
 
+        Prodi::create([
+            'kode_prodi' => 'FT-PR01',
+            'nama_prodi' => 'Teknik Informatika',
+            'fakultas_id' => $fakultases->firstWhere('kode_fakultas', 'FT')->fakultas_id,
+        ]);
+
         // Untuk setiap fakultas, buat 3 prodi
         foreach ($fakultases as $fakultas) {
             for ($i = 1; $i <= 3; $i++) {

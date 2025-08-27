@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             FakultasSeeder::class,
             ProdiSeeder::class,
             UserSeeder::class,
+            CplSeeder::class,
             PenilaianSeeder::class,
         ]);
     }
