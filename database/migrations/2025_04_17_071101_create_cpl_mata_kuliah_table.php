@@ -19,6 +19,9 @@ return new class extends Migration
             $table->timestamps();
 
             // Mendefinisikan foreign key, pastikan nama tabel dan kolom sesuai dengan definisi Anda
+            $table->foreign('cpl_id')
+                ->references('cpl_id')->on('cpl')
+                ->onDelete('cascade');
             $table->foreign('mata_kuliah_id')
                 ->references('mata_kuliah_id')->on('mata_kuliah')
                 ->onDelete('cascade');
