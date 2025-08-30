@@ -12,15 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('sub_penilaian_cpmk_mata_kuliah', function (Blueprint $table) {
-            $table->id('sub_penilaian_id');
+            $table->id('sub_penilaian_cpmk_mata_kuliah_id');
+            $table->unsignedBigInteger('sub_penilaian_id');
             $table->unsignedBigInteger('cpmk_id');
             $table->decimal('bobot', 5, 2)
                 ->comment('≤ bobot pada cpmk_mata_kuliah pivot');
             $table->timestamps();
 
             // FKs
+            $table->foreign('sub_penilaian_id')
+                ->references('sub_penilaian_id')
+                ->on('sub_penilaian')
+                ->onDelete('cascade');
             $table->foreign('cpmk_id')
-                ->references('id')
+                ->references('cpmk_id')
                 ->on('cpmk')
                 ->onDelete('cascade');
         });

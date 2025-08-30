@@ -63,12 +63,11 @@ class SubPenilaianTest extends TestCase
 
         // Buat CPL dan CPMK
         $this->cpl = CPL::factory()->create(['prodi_id' => $this->prodi->prodi_id]);
-        $this->cpmk = CPMK::factory()->create(['prodi_id' => $this->prodi->prodi_id]);
+        $this->cpmk = CPMK::factory()->create(['mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id]);
 
         // Setup relasi CPMK-MataKuliah dengan bobot
-        $this->mataKuliah->cpmks()->attach($this->cpmk->cpmk_id, [
-            'cpl_id' => $this->cpl->cpl_id,
-            'bobot' => 100.00
+        $this->cpmk->cpls()->attach($this->cpl->cpl_id, [
+            'bobot'  => 100.00,
         ]);
     }
 
@@ -81,9 +80,7 @@ class SubPenilaianTest extends TestCase
             'kelas_id' => $this->kelas->kelas_id
         ]);
         $subPenilaian1->cpmks()->attach($this->cpmk->cpmk_id, [
-            'cpl_id' => $this->cpl->cpl_id,
-            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
-            'bobot' => 100.00
+            'bobot' => 50.00,
         ]);
 
         $subPenilaian2 = SubPenilaian::factory()->create([
@@ -91,44 +88,49 @@ class SubPenilaianTest extends TestCase
             'kelas_id' => $this->kelas->kelas_id
         ]);
         $subPenilaian2->cpmks()->attach($this->cpmk->cpmk_id, [
-            'cpl_id' => $this->cpl->cpl_id,
-            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
-            'bobot' => 100.00
+            'bobot' => 50.00,
         ]);
 
-        $payload = ['action' => 'view'];
+        $payload = ['action' => 'view', 'kelas_id' => $this->kelas->kelas_id];
 
         $response = $this->actingAs($this->user)
             ->postJson('/api/kelola-sub-penilaian', $payload);
 
         $response->assertStatus(200)
-            ->assertJson(['message' => 'Semua data sub-penilaian berhasil diambil.'])
+            ->assertJson(['message' => 'Semua data sub-penilaian di kelas ini berhasil diambil.'])
             ->assertJsonStructure([
                 'data' => [
-                    '*' => ['sub_penilaian_id', 'nama_sub_penilaian', 'penilaian_id', 'kelas_id']
+                    '*' => [
+                        'sub_penilaian_id',
+                        'nama_sub_penilaian',
+                        'penilaian_id',
+                        'kelas_id',
+                        'cpmks' => [
+                            '*' => [
+                                'cpmk_id',
+                                'pivot' => ['bobot']
+                            ]
+                        ]
+                    ]
                 ]
-            ]);
-
-        $data = $response->json('data');
-        $this->assertCount(2, $data);
+            ])->assertJsonCount(2, 'data');
     }
 
     /** Test mengambil detail satu sub penilaian berdasarkan ID. */
     public function test_view_detail_sub_penilaian_berdasarkan_id(): void
     {
-        $subPenilaian = SubPenilaian::factory()->create([
-            'penilaian_id' => $this->penilaian->penilaian_id,
-            'kelas_id' => $this->kelas->kelas_id
+        $sub = SubPenilaian::factory()->create([
+            'penilaian_id'       => $this->penilaian->penilaian_id,
+            'kelas_id'           => $this->kelas->kelas_id,
+            'nama_sub_penilaian' => 'Detail Test',
         ]);
-        $subPenilaian->cpmks()->attach($this->cpmk->cpmk_id, [
-            'cpl_id' => $this->cpl->cpl_id,
-            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
-            'bobot' => 100.00
+        $sub->cpmks()->attach($this->cpmk->cpmk_id, [
+            'bobot' => 75.50,
         ]);
 
         $payload = [
-            'action' => 'view',
-            'sub_penilaian_id' => $subPenilaian->sub_penilaian_id
+            'action'            => 'view',
+            'sub_penilaian_id'  => $sub->sub_penilaian_id,
         ];
 
         $response = $this->actingAs($this->user)
@@ -136,36 +138,40 @@ class SubPenilaianTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJson([
-                'message' => 'Semua data sub-penilaian berhasil diambil.'
+                'message' => 'Data sub-penilaian berhasil diambil.'
+            ])
+            ->assertJsonStructure([
+                'data' => [
+                    'sub_penilaian_id',
+                    'nama_sub_penilaian',
+                    'penilaian_id',
+                    'kelas_id',
+                    'cpmks' => [
+                        '*' => [
+                            'cpmk_id',
+                            'pivot' => ['bobot']
+                        ]
+                    ]
+                ]
             ]);
 
-        $data = $response->json('data.0'); // Ambil data pertama dari array
-        $this->assertEquals($subPenilaian->sub_penilaian_id, $data['sub_penilaian_id']);
-        $this->assertEquals($subPenilaian->nama_sub_penilaian, $data['nama_sub_penilaian']);
+        $data = $response->json('data');
+        $this->assertEquals($sub->sub_penilaian_id, $data['sub_penilaian_id']);
         $this->assertCount(1, $data['cpmks']);
-
-        // Verifikasi data CPMK
-        $cpmk = $data['cpmks'][0];
-        $this->assertEquals($this->cpmk->cpmk_id, $cpmk['cpmk_id']);
-        $this->assertEquals(100.00, $cpmk['pivot']['bobot']);
+        $this->assertEquals(75.50, $data['cpmks'][0]['pivot']['bobot']);
     }
 
     /** Test pembuatan data sub penilaian berhasil. */
     public function test_store_sub_penilaian_berhasil(): void
     {
         $payload = [
-            'action' => 'store',
-            'penilaian_id' => $this->penilaian->penilaian_id,
-            'kelas_id' => $this->kelas->kelas_id,
+            'action'             => 'store',
+            'penilaian_id'       => $this->penilaian->penilaian_id,
+            'kelas_id'           => $this->kelas->kelas_id,
             'nama_sub_penilaian' => 'Sub Penilaian Test',
-            'cpmks' => [
-                [
-                    'cpmk_id' => $this->cpmk->cpmk_id,
-                    'cpl_id' => $this->cpl->cpl_id,
-                    'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
-                    'bobot' => 100.00
-                ]
-            ]
+            'cpmks'              => [
+                ['cpmk_id' => $this->cpmk->cpmk_id, 'bobot' => 100.00],
+            ],
         ];
 
         $response = $this->actingAs($this->user)
@@ -176,22 +182,27 @@ class SubPenilaianTest extends TestCase
             ->assertJsonStructure([
                 'data' => [
                     'sub_penilaian_id',
-                    'cpmks'
+                    'cpmks' => [
+                        '*' => [
+                            'cpmk_id',
+                            'pivot' => ['bobot']
+                        ]
+                    ]
                 ]
             ]);
 
+        $subId = $response->json('data.sub_penilaian_id');
         $this->assertDatabaseHas('sub_penilaian', [
-            'penilaian_id' => $this->penilaian->penilaian_id,
-            'kelas_id' => $this->kelas->kelas_id,
-            'nama_sub_penilaian' => 'Sub Penilaian Test'
+            'sub_penilaian_id'     => $subId,
+            'penilaian_id'         => $this->penilaian->penilaian_id,
+            'kelas_id'             => $this->kelas->kelas_id,
+            'nama_sub_penilaian'   => 'Sub Penilaian Test',
         ]);
 
         $this->assertDatabaseHas('sub_penilaian_cpmk_mata_kuliah', [
-            'sub_penilaian_id' => $response->json('data.sub_penilaian_id'),
-            'cpmk_id' => $this->cpmk->cpmk_id,
-            'cpl_id' => $this->cpl->cpl_id,
-            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
-            'bobot' => 100.00
+            'sub_penilaian_id' => $subId,
+            'cpmk_id'          => $this->cpmk->cpmk_id,
+            'bobot'            => 100.00,
         ]);
     }
 
@@ -199,13 +210,13 @@ class SubPenilaianTest extends TestCase
     public function test_store_sub_penilaian_validasi_gagal(): void
     {
         $payload = [
-            'action' => 'store',
-            'penilaian_id' => '',
-            'kelas_id' => '',
+            'action'             => 'store',
+            'penilaian_id'       => '',
+            'kelas_id'           => '',
             'nama_sub_penilaian' => '',
-            'cpmks' => [
-                ['cpmk_id' => '', 'cpl_id' => '', 'mata_kuliah_id' => '', 'bobot' => '']
-            ]
+            'cpmks'              => [
+                ['cpmk_id' => '', 'bobot' => '']
+            ],
         ];
 
         $response = $this->actingAs($this->user)
@@ -217,8 +228,6 @@ class SubPenilaianTest extends TestCase
                 'kelas_id',
                 'nama_sub_penilaian',
                 'cpmks.0.cpmk_id',
-                'cpmks.0.cpl_id',
-                'cpmks.0.mata_kuliah_id',
                 'cpmks.0.bobot'
             ]);
     }
@@ -226,87 +235,60 @@ class SubPenilaianTest extends TestCase
     /** Test update data sub penilaian berhasil. */
     public function test_update_sub_penilaian_berhasil(): void
     {
-        // Buat sub penilaian awal
-        $subPenilaian = SubPenilaian::factory()->create([
-            'penilaian_id' => $this->penilaian->penilaian_id,
-            'kelas_id' => $this->kelas->kelas_id,
-            'nama_sub_penilaian' => 'Sub Penilaian Test'
+        $sub = SubPenilaian::factory()->create([
+            'penilaian_id'       => $this->penilaian->penilaian_id,
+            'kelas_id'           => $this->kelas->kelas_id,
+            'nama_sub_penilaian' => 'Awal',
         ]);
-
-        // Tambahkan mapping CPMK awal
-        $subPenilaian->cpmks()->attach($this->cpmk->cpmk_id, [
-            'cpl_id' => $this->cpl->cpl_id,
-            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
-            'bobot' => 50.00
+        $sub->cpmks()->attach($this->cpmk->cpmk_id, [
+            'bobot' => 50.00,
         ]);
-
-        // Refresh model untuk memastikan relasi ter-load
-        $subPenilaian = $subPenilaian->fresh(['cpmks']);
 
         $payload = [
-            'action' => 'update',
-            'sub_penilaian_id' => $subPenilaian->sub_penilaian_id,
-            'penilaian_id' => $this->penilaian->penilaian_id,
-            'kelas_id' => $this->kelas->kelas_id,
+            'action'             => 'update',
+            'sub_penilaian_id'   => $sub->sub_penilaian_id,
+            'penilaian_id'       => $this->penilaian->penilaian_id,
+            'kelas_id'           => $this->kelas->kelas_id,
             'nama_sub_penilaian' => 'Updated Sub Penilaian',
-            'cpmks' => [
-                [
-                    'cpmk_id' => $this->cpmk->cpmk_id,
-                    'cpl_id' => $this->cpl->cpl_id,
-                    'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
-                    'bobot' => 100.00
-                ]
-            ]
+            'cpmks'              => [
+                ['cpmk_id' => $this->cpmk->cpmk_id, 'bobot' => 100.00]
+            ],
         ];
 
         $response = $this->actingAs($this->user)
             ->postJson('/api/kelola-sub-penilaian', $payload);
 
         $response->assertStatus(200)
-            ->assertJson([
-                'message' => 'Sub-penilaian berhasil diperbarui.'
-            ]);
+            ->assertJson(['message' => 'Sub-penilaian berhasil diperbarui.']);
 
-        // Verifikasi perubahan data utama
         $this->assertDatabaseHas('sub_penilaian', [
-            'sub_penilaian_id' => $subPenilaian->sub_penilaian_id,
-            'penilaian_id' => $this->penilaian->penilaian_id,
-            'kelas_id' => $this->kelas->kelas_id,
-            'nama_sub_penilaian' => 'Updated Sub Penilaian'
+            'sub_penilaian_id'     => $sub->sub_penilaian_id,
+            'nama_sub_penilaian'   => 'Updated Sub Penilaian',
         ]);
-
-        // Verifikasi perubahan relasi CPMK
         $this->assertDatabaseHas('sub_penilaian_cpmk_mata_kuliah', [
-            'sub_penilaian_id' => $subPenilaian->sub_penilaian_id,
-            'cpmk_id' => $this->cpmk->cpmk_id,
-            'cpl_id' => $this->cpl->cpl_id,
-            'mata_kuliah_id' => $this->mataKuliah->mata_kuliah_id,
-            'bobot' => 100.00
+            'sub_penilaian_id' => $sub->sub_penilaian_id,
+            'cpmk_id'          => $this->cpmk->cpmk_id,
+            'bobot'            => 100.00,
         ]);
-
-        // Verifikasi data yang diupdate
-        $updatedSubPenilaian = SubPenilaian::with('cpmks')->find($subPenilaian->sub_penilaian_id);
-        $this->assertEquals('Updated Sub Penilaian', $updatedSubPenilaian->nama_sub_penilaian);
-        $this->assertEquals(100.00, $updatedSubPenilaian->cpmks[0]->pivot->bobot);
     }
 
     /** Test validasi gagal saat update data sub penilaian. */
     public function test_update_sub_penilaian_validasi_gagal(): void
     {
-        $subPenilaian = SubPenilaian::factory()->create([
+        $sub = SubPenilaian::factory()->create([
             'penilaian_id' => $this->penilaian->penilaian_id,
-            'kelas_id' => $this->kelas->kelas_id
+            'kelas_id'     => $this->kelas->kelas_id,
         ]);
 
         $payload = [
-            'action' => 'update',
-            'sub_penilaian_id' => $subPenilaian->sub_penilaian_id,
-            'penilaian_id' => '',
-            'kelas_id' => '',
+            'action'             => 'update',
+            'sub_penilaian_id'   => $sub->sub_penilaian_id,
+            'penilaian_id'       => '',
+            'kelas_id'           => '',
             'nama_sub_penilaian' => '',
-            'cpmks' => [
-                ['cpmk_id' => '', 'cpl_id' => '', 'mata_kuliah_id' => '', 'bobot' => '']
-            ]
+            'cpmks'              => [
+                ['cpmk_id' => '', 'bobot' => '']
+            ],
         ];
 
         $response = $this->actingAs($this->user)
@@ -318,8 +300,6 @@ class SubPenilaianTest extends TestCase
                 'kelas_id',
                 'nama_sub_penilaian',
                 'cpmks.0.cpmk_id',
-                'cpmks.0.cpl_id',
-                'cpmks.0.mata_kuliah_id',
                 'cpmks.0.bobot'
             ]);
     }
@@ -327,14 +307,14 @@ class SubPenilaianTest extends TestCase
     /** Test penghapusan data sub penilaian. */
     public function test_delete_sub_penilaian_berhasil(): void
     {
-        $subPenilaian = SubPenilaian::factory()->create([
-            'penilaian_id' => $this->penilaian->penilaian_id,
-            'kelas_id' => $this->kelas->kelas_id
+        $sub = SubPenilaian::factory()->create([
+            'penilaian_id'       => $this->penilaian->penilaian_id,
+            'kelas_id'           => $this->kelas->kelas_id,
         ]);
 
         $payload = [
-            'action' => 'delete',
-            'sub_penilaian_id' => $subPenilaian->sub_penilaian_id
+            'action'            => 'delete',
+            'sub_penilaian_id'  => $sub->sub_penilaian_id,
         ];
 
         $response = $this->actingAs($this->user)
@@ -344,7 +324,7 @@ class SubPenilaianTest extends TestCase
             ->assertJson(['message' => 'Sub-penilaian berhasil dihapus.']);
 
         $this->assertDatabaseMissing('sub_penilaian', [
-            'sub_penilaian_id' => $subPenilaian->sub_penilaian_id
+            'sub_penilaian_id' => $sub->sub_penilaian_id,
         ]);
     }
 }

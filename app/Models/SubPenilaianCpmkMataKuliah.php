@@ -2,19 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class SubPenilaianCpmkMataKuliah extends Model
+class SubPenilaianCpmkMataKuliah extends Pivot
 {
     protected $table = 'sub_penilaian_cpmk_mata_kuliah';
-    public $incrementing = false;
-    protected $primaryKey = ['sub_penilaian_id', 'cpmk_id', 'mata_kuliah_id', 'cpl_id'];
+    protected $primaryKey = 'sub_penilaian_cpmk_mata_kuliah_id';
+
+    public $incrementing = true;
+    public $timestamps   = true;
 
     protected $fillable = [
         'sub_penilaian_id',
-        'mata_kuliah_id',
         'cpmk_id',
-        'cpl_id',
         'bobot',
     ];
 
@@ -23,14 +23,14 @@ class SubPenilaianCpmkMataKuliah extends Model
         return $this->belongsTo(SubPenilaian::class, 'sub_penilaian_id');
     }
 
-    public function cpmkMataKuliah()
-    {
-        return $this->belongsTo(MataKuliahCpmkPivot::class, [
-            'mata_kuliah_id',
-            'cpmk_id',
-            'cpl_id'
-        ]);
-    }
+    // public function cpmkMataKuliah()
+    // {
+    //     return $this->belongsTo(MataKuliahCpmkPivot::class, [
+    //         'mata_kuliah_id',
+    //         'cpmk_id',
+    //         'cpl_id'
+    //     ]);
+    // }
 
     public function cpmk()
     {
@@ -38,8 +38,8 @@ class SubPenilaianCpmkMataKuliah extends Model
     }
 
     // (opsional) jika kamu butuh akses CPL-nya juga
-    public function cpl()
-    {
-        return $this->belongsTo(CPL::class, 'cpl_id');
-    }
+    // public function cpl()
+    // {
+    //     return $this->belongsTo(CPL::class, 'cpl_id');
+    // }
 }
