@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminProdiController;
 use App\Http\Controllers\AdminUniversitasController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DosenController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -132,10 +133,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //     Route::post('/map-cpmk', [PermissionController::class, 'mapCPMK']);
     // });
 
-    // // Dosen
-    // Route::middleware(['role:dosen'])->group(function () {
-    //     Route::post('/input-bobot-cpl', [PermissionController::class, 'inputBobotCPL']);
-    //     Route::post('/input-bobot-cpmk', [PermissionController::class, 'inputBobotCPMK']);
-    //     Route::post('/manage-nilai-mahasiswa', [PermissionController::class, 'manageNilaiMahasiswa']);
-    // });
+    // Dosen
+    Route::middleware(['role:Dosen', 'permission:Mengelola data nilai mahasiswa'])->group(function () {
+        Route::get('/kelola-nilai-mahasiswa', [DosenController::class, 'kelolaNilaiSubPenilaianMahasiswa']);
+        Route::post('/kelola-nilai-mahasiswa', [DosenController::class, 'kelolaNilaiSubPenilaianMahasiswa']);
+        Route::put('/kelola-nilai-mahasiswa', [DosenController::class, 'kelolaNilaiSubPenilaianMahasiswa']);
+        Route::delete('/kelola-nilai-mahasiswa', [DosenController::class, 'kelolaNilaiSubPenilaianMahasiswa']);
+    });
 });
