@@ -34,6 +34,7 @@ class MahasiswaFactory extends Factory
             'prodi_id' => function () {
                 return Prodi::factory()->create()->prodi_id;
             },
+            'angkatan'  => $this->faker->numberBetween(2015, date('Y')),
         ];
     }
 }
