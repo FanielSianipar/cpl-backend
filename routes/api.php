@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminProdiController;
 use App\Http\Controllers\AdminUniversitasController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DosenController;
+use App\Http\Controllers\KaprodiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -127,11 +128,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
     });
 
-    // // Kaprodi
-    // Route::middleware(['role:kaprodi'])->group(function () {
-    //     Route::post('/map-cpl', [PermissionController::class, 'mapCPL']);
-    //     Route::post('/map-cpmk', [PermissionController::class, 'mapCPMK']);
-    // });
+    // Kaprodi
+    Route::middleware(['role:Kaprodi', 'permission:Melihat hasil perhitungan'])->group(function () {
+        Route::get('/daftar-mata-kuliah', [KaprodiController::class, 'melihatDaftarMataKuliah']);
+        // Route::post('/map-cpl', [PermissionController::class, 'mapCPL']);
+        // Route::post('/map-cpmk', [PermissionController::class, 'mapCPMK']);
+    });
 
     // Dosen
     Route::middleware(['role:Dosen', 'permission:Mengelola data nilai mahasiswa'])->group(function () {
