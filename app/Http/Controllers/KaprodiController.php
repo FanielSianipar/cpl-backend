@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\MelihatHasilPerhitunganRequest;
 use App\Services\KaprodiService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class KaprodiController extends Controller
@@ -23,6 +24,21 @@ class KaprodiController extends Controller
     public function melihatDaftarMataKuliah()
     {
         $result  = $this->kaprodiService->melihatDaftarMataKuliah();
+        return response()->json($result, 200);
+    }
+
+    /**
+     * Tampilkan “Hasil Perhitungan” lengkap untuk satu kelas.
+     *
+     * @param  int  $kelas_id
+     * @return JsonResponse
+     */
+    public function detailPerhitunganPerkelas(MelihatHasilPerhitunganRequest $request): JsonResponse
+    {
+        $kelasId = $request->validated()['kelas_id'];
+
+        $result = $this->kaprodiService->detailPerhitunganPerkelas($kelasId);
+
         return response()->json($result, 200);
     }
 

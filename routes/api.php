@@ -131,6 +131,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Kaprodi
     Route::middleware(['role:Kaprodi', 'permission:Melihat hasil perhitungan'])->group(function () {
         Route::get('/daftar-mata-kuliah', [KaprodiController::class, 'melihatDaftarMataKuliah']);
+        Route::get('/detail-perhitungan-perkelas', [KaprodiController::class, 'detailPerhitunganPerkelas']);
         // Route::post('/map-cpl', [PermissionController::class, 'mapCPL']);
         // Route::post('/map-cpmk', [PermissionController::class, 'mapCPMK']);
     });
