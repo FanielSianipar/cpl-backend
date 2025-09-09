@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\MelihatHasilPerhitunganRequest;
 use App\Services\KaprodiService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class KaprodiController extends Controller
 {
@@ -19,6 +18,12 @@ class KaprodiController extends Controller
     public function __construct(KaprodiService $kaprodiService)
     {
         $this->kaprodiService = $kaprodiService;
+    }
+
+    public function statusPengisianNilai()
+    {
+        $result  = $this->kaprodiService->statusPengisianNilai();
+        return response()->json($result, 200);
     }
 
     public function melihatDaftarMataKuliah()
