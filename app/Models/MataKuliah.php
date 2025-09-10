@@ -51,7 +51,7 @@ class MataKuliah extends Model
             'mata_kuliah_id',
         )
             ->using(CplMataKuliah::class)
-            ->withPivot('bobot')
+            ->withPivot('cpl_mata_kuliah_id', 'bobot')
             ->withTimestamps();
     }
 
