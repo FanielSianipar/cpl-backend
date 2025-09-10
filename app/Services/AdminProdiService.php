@@ -938,11 +938,23 @@ class AdminProdiService
                 // Jika ada ID mata kuliah, tampilkan pemetaan CPL untuk mata kuliah tersebut.
                 if (isset($data['mata_kuliah_id'])) {
                     $mataKuliah = MataKuliah::with('cpls')->find($data['mata_kuliah_id']);
+                    $pemetaan   = [];
+
+                    foreach ($mataKuliah->cpls as $cpl) {
+                        $pemetaan[] = [
+                            'cpl_mata_kuliah_id' => $cpl->pivot->cpl_mata_kuliah_id,
+                            'mata_kuliah_id'      => $mataKuliah->mata_kuliah_id,
+                            'cpl_id'              => $cpl->cpl_id,
+                            'bobot'               => $cpl->pivot->bobot,
+                        ];
+                    }
+
                     if (!$mataKuliah) {
                         return ['message' => 'Mata kuliah tidak ditemukan.'];
                     }
+
                     return [
-                        'data'    => $mataKuliah->cpls,
+                        'data'    => $pemetaan,
                         'message' => 'Data pemetaan CPL berhasil diambil.'
                     ];
                 }
