@@ -1134,6 +1134,8 @@ class AdminProdiService
         foreach ($mataKuliah->cpmks as $cpmk) {
             foreach ($cpmk->cpls as $cpl) {
                 $pemetaan[] = [
+                    'kode_cpmk'          => $cpmk->kode_cpmk,
+                    'deskripsi_cpmk'     => $cpmk->deskripsi,
                     'cpmk_mata_kuliah_id' => $cpl->pivot->cpmk_mata_kuliah_id,
                     'mata_kuliah_id'      => $mataKuliah->mata_kuliah_id,
                     'cpmk_id'             => $cpmk->cpmk_id,
