@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class CplMataKuliah extends Model
+class CplMataKuliah extends Pivot
 {
     protected $table = 'cpl_mata_kuliah';
 
     protected $primaryKey = 'cpl_mata_kuliah_id';
+    public    $incrementing = true;
+    public    $timestamps   = true;
 
     protected $fillable = [
         'mata_kuliah_id',

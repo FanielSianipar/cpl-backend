@@ -1074,11 +1074,9 @@ class AdminProdiService
 
             // Simpan mapping:
             if ($mode === 'store') {
-                $mataKuliah->cpls()->attach($syncData);
+                $mataKuliah->cpls()->syncWithoutDetaching($syncData);
             } else {
-                // Bisa langsung sync juga: $mataKuliah->cpls()->sync($syncData);
-                $mataKuliah->cpls()->detach(array_keys($syncData));
-                $mataKuliah->cpls()->attach($syncData);
+                $mataKuliah->cpls()->sync($syncData);
             }
 
             DB::commit();
