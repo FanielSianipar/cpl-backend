@@ -47,8 +47,8 @@ class MataKuliah extends Model
         return $this->belongsToMany(
             CPL::class,
             'cpl_mata_kuliah',
-            'cpl_id',
             'mata_kuliah_id',
+            'cpl_id',
         )
             ->using(CplMataKuliah::class)
             ->withPivot('cpl_mata_kuliah_id', 'bobot')
