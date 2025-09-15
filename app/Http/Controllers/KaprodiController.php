@@ -20,6 +20,12 @@ class KaprodiController extends Controller
         $this->kaprodiService = $kaprodiService;
     }
 
+    public function nilaiCplSeluruhMataKuliah()
+    {
+        $result  = $this->kaprodiService->nilaiCplSeluruhMataKuliah();
+        return response()->json($result, 200);
+    }
+
     public function statusPengisianNilai()
     {
         $result  = $this->kaprodiService->statusPengisianNilai();

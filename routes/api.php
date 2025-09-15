@@ -130,9 +130,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Kaprodi
     Route::middleware(['role:Kaprodi', 'permission:Melihat hasil perhitungan'])->group(function () {
+        Route::get('/status-pengisian-nilai', [KaprodiController::class, 'statusPengisianNilai']);
+        Route::get('/nilai-cpl-seluruh-mata-kuliah', [KaprodiController::class, 'nilaiCplSeluruhMataKuliah']);
         Route::get('/daftar-mata-kuliah', [KaprodiController::class, 'melihatDaftarMataKuliah']);
         Route::get('/detail-perhitungan-perkelas', [KaprodiController::class, 'detailPerhitunganPerkelas']);
-        Route::get('/status-pengisian-nilai', [KaprodiController::class, 'statusPengisianNilai']);
         // Route::post('/map-cpl', [PermissionController::class, 'mapCPL']);
         // Route::post('/map-cpmk', [PermissionController::class, 'mapCPMK']);
     });

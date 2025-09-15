@@ -13,6 +13,73 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class KaprodiService
 {
+    public function nilaiCplSeluruhMataKuliah(?int $angkatan = null, ?string $tahunAjaran = null): array
+    {
+        // Hitung nilai per kelas per mahasiswa per CPL
+        $nilaiPerKelas = DB::table('cpl')
+            ->join('cpmk_mata_kuliah as cpmk_mk', 'cpl.cpl_id', '=', 'cpmk_mk.cpl_id')
+            ->join('cpmk', 'cpmk_mk.cpmk_id', '=', 'cpmk.cpmk_id')
+            ->join('sub_penilaian_cpmk_mata_kuliah as spcmk', 'cpmk.cpmk_id', '=', 'spcmk.cpmk_id')
+            ->join('sub_penilaian as sp', 'spcmk.sub_penilaian_id', '=', 'sp.sub_penilaian_id')
+            ->join('kelas as kls', 'sp.kelas_id', '=', 'kls.kelas_id')
+            ->leftJoin('nilai_sub_penilaian_mahasiswa as nspm', 'spcmk.sub_penilaian_cpmk_mata_kuliah_id', '=', 'nspm.sub_penilaian_cpmk_mata_kuliah_id')
+            ->leftJoin('mahasiswa as mhs', 'nspm.mahasiswa_id', '=', 'mhs.mahasiswa_id')
+            // Filter angkatan jika diberikan
+            ->when($angkatan, fn($q) => $q->where('mhs.angkatan', $angkatan))
+            // Filter tahun ajaran jika diberikan
+            ->when($tahunAjaran, fn($q) => $q->where('kls.tahun_ajaran', $tahunAjaran))
+            ->groupBy('cpl.cpl_id', 'cpl.kode_cpl', 'kls.kelas_id', 'nspm.mahasiswa_id')
+            ->select(
+                'cpl.cpl_id',
+                'cpl.kode_cpl',
+                'nspm.mahasiswa_id',
+                DB::raw('SUM(COALESCE(nspm.nilai_terbobot, 0)) / COUNT(DISTINCT spcmk.sub_penilaian_cpmk_mata_kuliah_id) as nilai_per_kelas')
+            );
+
+        // Hitung nilai CPL per mahasiswa (rata-rata nilai per kelas yang diambil)
+        $nilaiPerMahasiswa = DB::query()
+            ->fromSub($nilaiPerKelas, 'pk')
+            ->groupBy('pk.cpl_id', 'pk.kode_cpl', 'pk.mahasiswa_id')
+            ->select(
+                'pk.cpl_id',
+                'pk.kode_cpl',
+                'pk.mahasiswa_id',
+                DB::raw('AVG(pk.nilai_per_kelas) as nilai_cpl_per_mhs')
+            );
+
+        // Hitung rata-rata CPL antar mahasiswa
+        $rows = DB::query()
+            ->fromSub($nilaiPerMahasiswa, 'pm')
+            ->groupBy('pm.cpl_id', 'pm.kode_cpl')
+            ->select(
+                'pm.kode_cpl',
+                DB::raw('75 as target'), // Hardcode KKM
+                DB::raw('AVG(pm.nilai_cpl_per_mhs) as aktual')
+            )
+            ->orderBy('pm.kode_cpl')
+            ->get();
+
+        // 4️⃣ Format siap Chart.js
+        return [
+            'labels'   => $rows->pluck('kode_cpl')->toArray(),
+            'datasets' => [
+                [
+                    'label'           => 'Target CPL',
+                    'data'            => $rows->pluck('target')->map(fn($v) => round($v, 2))->toArray(),
+                    // 'borderColor'     => 'rgba(54, 162, 235, 1)',
+                    // 'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
+                    // 'borderDash'      => [5, 5],
+                ],
+                [
+                    'label'           => 'Aktual CPL',
+                    'data'            => $rows->pluck('aktual')->map(fn($v) => round($v, 2))->toArray(),
+                    // 'borderColor'     => 'rgba(255, 99, 132, 1)',
+                    // 'backgroundColor' => 'rgba(255, 99, 132, 0.2)',
+                ],
+            ],
+        ];
+    }
+
     /**
      * Ambil status upload nilai untuk semua kelas (per baris),
      * menampilkan hanya dosen dengan jabatan 'Dosen Utama'.
