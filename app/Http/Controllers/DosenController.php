@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\NilaiSubPenilaianMahasiswaRequest;
 use App\Services\DosenService;
+use Illuminate\Http\JsonResponse;
 
 class DosenController extends Controller
 {
@@ -17,6 +18,18 @@ class DosenController extends Controller
     public function __construct(DosenService $dosenService)
     {
         $this->dosenService = $dosenService;
+    }
+
+    /**
+     * Tampilkan keseluruhan data jenis Penilaian.
+     *
+     * @return JsonResponse
+     */
+    public function dataJenisPenilaian(): JsonResponse
+    {
+        $result = $this->dosenService->dataJenisPenilaian();
+
+        return response()->json($result, 200);
     }
 
     public function kelolaNilaiSubPenilaianMahasiswa(NilaiSubPenilaianMahasiswaRequest $request)

@@ -9,6 +9,7 @@ use App\Models\Kelas;
 use App\Models\Mahasiswa;
 use App\Models\MataKuliah;
 use App\Models\MataKuliahCpmkPivot;
+use App\Models\Penilaian;
 use App\Models\Prodi;
 use App\Models\User;
 use Exception;
@@ -1266,6 +1267,21 @@ class AdminProdiService
         } catch (\Exception $e) {
             DB::rollBack();
             return ['message' => 'Penghapusan pemetaan CPMK gagal: ' . $e->getMessage()];
+        }
+    }
+
+    // Data Jenis Penilaian
+    public function dataJenisPenilaian(): array
+    {
+        try {
+            // Ambil data jenis penilaian dari model Penilaian
+            $penilaian = Penilaian::select('penilaian_id', 'nama_penilaian')->get();
+            return [
+                'data'    => $penilaian,
+                'message' => 'Data jenis penilaian berhasil diambil.'
+            ];
+        } catch (Exception $e) {
+            throw new Exception('Gagal mengambil data jenis penilaian: ' . $e->getMessage());
         }
     }
 

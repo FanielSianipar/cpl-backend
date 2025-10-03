@@ -14,6 +14,7 @@ use App\Http\Requests\PemetaanCpmkRequest;
 use App\Http\Requests\StoreAkunRequest;
 use App\Http\Requests\SubPenilaianRequest;
 use App\Services\AdminProdiService;
+use Illuminate\Http\JsonResponse;
 
 class AdminProdiController extends Controller
 {
@@ -245,6 +246,18 @@ class AdminProdiController extends Controller
         }
 
         return response()->json($result, $statusCode);
+    }
+
+    /**
+     * Tampilkan keseluruhan data jenis Penilaian.
+     *
+     * @return JsonResponse
+     */
+    public function dataJenisPenilaian(): JsonResponse
+    {
+        $result = $this->adminProdiService->dataJenisPenilaian();
+
+        return response()->json($result, 200);
     }
 
     public function kelolaSubPenilaian(SubPenilaianRequest $request)
