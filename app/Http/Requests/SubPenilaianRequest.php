@@ -15,6 +15,21 @@ class SubPenilaianRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $input = $this->all();
+
+        if (! empty($input['cpmks']) && is_array($input['cpmks'])) {
+            foreach ($input['cpmks'] as $i => $item) {
+                if (! array_key_exists('bobot', $item) || $item['bobot'] === null || $item['bobot'] === '') {
+                    $input['cpmks'][$i]['bobot'] = 0;
+                }
+            }
+        }
+
+        $this->replace($input);
+    }
+
     /**
      * Dapatkan aturan validasi yang berlaku untuk request sub-penilaian.
      */
@@ -47,7 +62,7 @@ class SubPenilaianRequest extends FormRequest
                 'nama_sub_penilaian'       => ['required', 'string', 'max:100'],
                 'cpmks'                    => ['required', 'array', 'min:1'],
                 'cpmks.*.cpmk_id'          => ['required', 'exists:cpmk,cpmk_id'],
-                'cpmks.*.bobot'            => ['required', 'numeric', 'min:0'],
+                'cpmks.*.bobot'            => ['sometimes', 'nullable', 'numeric', 'min:0'],
             ];
         } elseif ($action === 'update') {
             $rules += [
@@ -90,7 +105,7 @@ class SubPenilaianRequest extends FormRequest
             'cpmks.min'                         => 'Minimal satu data CPMK-CPL harus disertakan.',
             'cpmks.*.cpmk_id.required'          => 'ID CPMK wajib diisi.',
             'cpmks.*.cpmk_id.exists'            => 'CPMK tidak valid.',
-            'cpmks.*.bobot.required'            => 'Bobot CPMK wajib diisi.',
+            // 'cpmks.*.bobot.required'            => 'Bobot CPMK wajib diisi.',
             'cpmks.*.bobot.numeric'             => 'Bobot CPMK harus berupa angka.',
             'cpmks.*.bobot.min'                 => 'Bobot CPMK minimal 0.',
 

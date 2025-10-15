@@ -16,7 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('sub_penilaian_id');
             $table->unsignedBigInteger('cpmk_id');
             $table->decimal('bobot', 5, 2)
-                ->comment('≤ bobot pada cpmk_mata_kuliah pivot');
+                ->comment('≤ bobot pada cpmk_mata_kuliah pivot')
+                ->default(0);
             $table->timestamps();
 
             // FKs
