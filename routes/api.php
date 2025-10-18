@@ -143,6 +143,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Kelola sub penilaian
     Route::middleware(['role:Dosen', 'permission:Mengelola sub penilaian'])->group(function () {
         Route::get('/data-jenis-penilaian', [DosenController::class, 'dataJenisPenilaian']);
+        Route::get('/data-kelas-mata-kuliah', [DosenController::class, 'dataKelasMataKuliah']);
         // Route::get('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);
         // Route::post('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);
         // Route::put('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);

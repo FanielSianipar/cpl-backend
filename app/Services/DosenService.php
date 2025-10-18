@@ -27,6 +27,33 @@ class DosenService
         }
     }
 
+    // Data Kelas Mata Kuliah yang Diampu Dosen
+    public function dataKelasMataKuliah(): array
+    {
+        try {
+            // Ambil data kelas mata kuliah yang diampu oleh dosen dari tabel kelas_dosen
+            $kelasMataKuliah = DB::table('kelas_dosen')
+                ->join('kelas', 'kelas_dosen.kelas_id', '=', 'kelas.kelas_id')
+                ->join('mata_kuliah', 'kelas.mata_kuliah_id', '=', 'mata_kuliah.mata_kuliah_id')
+                ->select(
+                    'kelas_dosen.kelas_id',
+                    'mata_kuliah.kode_mata_kuliah',
+                    'mata_kuliah.nama_mata_kuliah',
+                    'kelas.nama_kelas',
+                    'kelas.tahun_ajaran',
+                    DB::raw("(CASE WHEN (kelas.semester % 2) = 0 THEN 'Genap' ELSE 'Ganjil' END) AS semester")
+                )
+                ->get();
+
+            return [
+                'data'    => $kelasMataKuliah,
+                'message' => 'Data kelas mata kuliah berhasil diambil.'
+            ];
+        } catch (Exception $e) {
+            throw new Exception('Gagal mengambil data kelas mata kuliah: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Tangani aksi view, store, update, delete nilai sub-penilaian mahasiswa.
      *

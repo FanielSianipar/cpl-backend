@@ -32,6 +32,18 @@ class DosenController extends Controller
         return response()->json($result, 200);
     }
 
+    /**
+     * Tampilkan keseluruhan data kelas mata kuliah yang diampu oleh dosen.
+     *
+     * @return JsonResponse
+     */
+    public function dataKelasMataKuliah(): JsonResponse
+    {
+        $result = $this->dosenService->dataKelasMataKuliah();
+
+        return response()->json($result, 200);
+    }
+
     public function kelolaNilaiSubPenilaianMahasiswa(NilaiSubPenilaianMahasiswaRequest $request)
     {
         // Dapatkan data tervalidasi, lalu tambahkan key 'action' (misalnya dikirim via query atau body)
