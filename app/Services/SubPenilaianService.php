@@ -30,6 +30,64 @@ class SubPenilaianService
      * @param  array  $data
      * @return array
      */
+    // public function kelolaSubPenilaian(array $data): array
+    // {
+    //     if (!isset($data['action'])) {
+    //         return ['message' => 'Action tidak ditemukan.'];
+    //     }
+
+    //     switch ($data['action']) {
+    //         case 'view':
+    //             if (isset($data['sub_penilaian_id'])) {
+    //                 $subPenilaian = SubPenilaian::with('cpmks')->find($data['sub_penilaian_id']);
+
+    //                 if (!$subPenilaian) {
+    //                     return ['message' => 'Sub-penilaian tidak ditemukan.'];
+    //                 }
+
+    //                 return [
+    //                     'data'    => $subPenilaian,
+    //                     'message' => 'Data sub-penilaian berhasil diambil.'
+    //                 ];
+    //             }
+
+    //             if (! isset($data['kelas_id'])) {
+    //                 return ['message' => 'Parameter kelas_id diperlukan untuk mengambil semua data sub-penilaian.'];
+    //             }
+    //             $all = SubPenilaian::with('cpmks')->where('kelas_id', $data['kelas_id'])->get();
+    //             return [
+    //                 'data'    => $all,
+    //                 'message' => 'Semua data sub-penilaian di kelas ini berhasil diambil.'
+    //             ];
+
+    //         case 'store':
+    //             return $this->syncSubPenilaianCpmk($data, 'store');
+
+    //         case 'update':
+    //             return $this->syncSubPenilaianCpmk($data, 'update');
+
+    //         case 'delete':
+    //             if (!isset($data['sub_penilaian_id'])) {
+    //                 return ['message' => 'ID sub-penilaian diperlukan untuk delete.'];
+    //             }
+
+    //             DB::beginTransaction();
+
+    //             // Hapus data pivot
+    //             SubPenilaianCpmkMataKuliah::where('sub_penilaian_id', $data['sub_penilaian_id'])->delete();
+
+    //             // Hapus sub_penilaian
+    //             SubPenilaian::findOrFail($data['sub_penilaian_id'])->delete();
+
+    //             DB::commit();
+
+    //             return ['message' => 'Sub-penilaian berhasil dihapus.'];
+
+    //         default:
+    //             return ['message' => 'Action tidak dikenali.'];
+    //     }
+    // }
+
     public function kelolaSubPenilaian(array $data): array
     {
         if (!isset($data['action'])) {
@@ -40,11 +98,9 @@ class SubPenilaianService
             case 'view':
                 if (isset($data['sub_penilaian_id'])) {
                     $subPenilaian = SubPenilaian::with('cpmks')->find($data['sub_penilaian_id']);
-
                     if (!$subPenilaian) {
                         return ['message' => 'Sub-penilaian tidak ditemukan.'];
                     }
-
                     return [
                         'data'    => $subPenilaian,
                         'message' => 'Data sub-penilaian berhasil diambil.'
@@ -54,6 +110,7 @@ class SubPenilaianService
                 if (! isset($data['kelas_id'])) {
                     return ['message' => 'Parameter kelas_id diperlukan untuk mengambil semua data sub-penilaian.'];
                 }
+
                 $all = SubPenilaian::with('cpmks')->where('kelas_id', $data['kelas_id'])->get();
                 return [
                     'data'    => $all,
@@ -61,10 +118,25 @@ class SubPenilaianService
                 ];
 
             case 'store':
-                return $this->syncSubPenilaianCpmk($data, 'store');
+                // langsung lakukan create master sub_penilaian di sini (tanpa pivot)
+                if (!isset($data['penilaian_id'], $data['kelas_id'], $data['nama_sub_penilaian'])) {
+                    return ['message' => 'Data sub-penilaian tidak lengkap.'];
+                }
 
-            case 'update':
-                return $this->syncSubPenilaianCpmk($data, 'update');
+                try {
+                    $subPenilaian = SubPenilaian::create([
+                        'penilaian_id'       => $data['penilaian_id'],
+                        'kelas_id'           => $data['kelas_id'],
+                        'nama_sub_penilaian' => $data['nama_sub_penilaian'],
+                    ]);
+
+                    return [
+                        'data'    => $subPenilaian,
+                        'message' => 'Sub-penilaian berhasil ditambahkan.'
+                    ];
+                } catch (\Exception $e) {
+                    return ['message' => 'Gagal menyimpan sub-penilaian: ' . $e->getMessage()];
+                }
 
             case 'delete':
                 if (!isset($data['sub_penilaian_id'])) {
@@ -72,16 +144,16 @@ class SubPenilaianService
                 }
 
                 DB::beginTransaction();
-
-                // Hapus data pivot
-                SubPenilaianCpmkMataKuliah::where('sub_penilaian_id', $data['sub_penilaian_id'])->delete();
-
-                // Hapus sub_penilaian
-                SubPenilaian::findOrFail($data['sub_penilaian_id'])->delete();
-
-                DB::commit();
-
-                return ['message' => 'Sub-penilaian berhasil dihapus.'];
+                try {
+                    SubPenilaian::findOrFail($data['sub_penilaian_id'])->delete();
+                    // jika FK cascade tidak aktif, uncomment baris berikut:
+                    // SubPenilaianCpmkMataKuliah::where('sub_penilaian_id', $data['sub_penilaian_id'])->delete();
+                    DB::commit();
+                    return ['message' => 'Sub-penilaian berhasil dihapus.'];
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    return ['message' => 'Gagal menghapus sub-penilaian: ' . $e->getMessage()];
+                }
 
             default:
                 return ['message' => 'Action tidak dikenali.'];
