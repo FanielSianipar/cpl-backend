@@ -31,18 +31,21 @@ class DosenService
     public function dataKelasMataKuliah(): array
     {
         try {
-            // Ambil data kelas mata kuliah yang diampu oleh dosen dari tabel kelas_dosen
+            $dosenId = auth()->id(); // atau auth()->user()->dosen_id jika struktur user berbeda
+
             $kelasMataKuliah = DB::table('kelas_dosen')
                 ->join('kelas', 'kelas_dosen.kelas_id', '=', 'kelas.kelas_id')
                 ->join('mata_kuliah', 'kelas.mata_kuliah_id', '=', 'mata_kuliah.mata_kuliah_id')
+                ->where('kelas_dosen.dosen_id', $dosenId)
                 ->select(
                     'kelas_dosen.kelas_id',
                     'mata_kuliah.kode_mata_kuliah',
                     'mata_kuliah.nama_mata_kuliah',
                     'kelas.nama_kelas',
                     'kelas.tahun_ajaran',
-                    DB::raw("(CASE WHEN (kelas.semester % 2) = 0 THEN 'Genap' ELSE 'Ganjil' END) AS semester")
+                    DB::raw("(CASE WHEN (COALESCE(kelas.semester,0) % 2) = 0 THEN 'Genap' ELSE 'Ganjil' END) AS semester")
                 )
+                ->distinct()
                 ->get();
 
             return [
