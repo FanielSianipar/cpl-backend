@@ -123,7 +123,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Kelola sub penilaian
     Route::middleware(['role:Admin Prodi', 'permission:Mengelola sub penilaian'])->group(function () {
         Route::get('/data-jenis-penilaian-prodi', [AdminProdiController::class, 'dataJenisPenilaian']);
-        Route::get('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
+        Route::get('/kelola-sub-penilaian-oleh-prodi', [AdminProdiController::class, 'kelolaSubPenilaian']);
         Route::post('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
         Route::put('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
         Route::delete('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
@@ -144,7 +144,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::middleware(['role:Dosen', 'permission:Mengelola sub penilaian'])->group(function () {
         Route::get('/data-jenis-penilaian', [DosenController::class, 'dataJenisPenilaian']);
         Route::get('/data-kelas-mata-kuliah', [DosenController::class, 'dataKelasMataKuliah']);
-        // Route::get('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);
+        Route::get('/kelola-sub-penilaian-oleh-dosen', [DosenController::class, 'kelolaSubPenilaian']);
         // Route::post('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);
         // Route::put('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);
         // Route::delete('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);

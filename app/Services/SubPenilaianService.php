@@ -51,7 +51,7 @@ class SubPenilaianService
     //                 ];
     //             }
 
-    //             if (! isset($data['kelas_id'])) {
+    //             if (!isset($data['kelas_id'])) {
     //                 return ['message' => 'Parameter kelas_id diperlukan untuk mengambil semua data sub-penilaian.'];
     //             }
     //             $all = SubPenilaian::with('cpmks')->where('kelas_id', $data['kelas_id'])->get();
@@ -96,24 +96,29 @@ class SubPenilaianService
 
         switch ($data['action']) {
             case 'view':
+                // view single master sub_penilaian (tanpa cpmks/pivot)
                 if (isset($data['sub_penilaian_id'])) {
-                    $subPenilaian = SubPenilaian::with('cpmks')->find($data['sub_penilaian_id']);
+                    $subPenilaian = SubPenilaian::find($data['sub_penilaian_id']);
                     if (!$subPenilaian) {
                         return ['message' => 'Sub-penilaian tidak ditemukan.'];
                     }
                     return [
-                        'data'    => $subPenilaian,
+                        'data' => $subPenilaian,
                         'message' => 'Data sub-penilaian berhasil diambil.'
                     ];
                 }
 
-                if (! isset($data['kelas_id'])) {
+                // view list per kelas (hanya master records)
+                if (!isset($data['kelas_id'])) {
                     return ['message' => 'Parameter kelas_id diperlukan untuk mengambil semua data sub-penilaian.'];
                 }
 
-                $all = SubPenilaian::with('cpmks')->where('kelas_id', $data['kelas_id'])->get();
+                $subPenilaians = SubPenilaian::where('kelas_id', $data['kelas_id'])
+                    ->orderBy('created_at', 'asc')
+                    ->get(['sub_penilaian_id', 'penilaian_id', 'kelas_id', 'nama_sub_penilaian', 'created_at', 'updated_at']);
+
                 return [
-                    'data'    => $all,
+                    'data' => $subPenilaians,
                     'message' => 'Semua data sub-penilaian di kelas ini berhasil diambil.'
                 ];
 
