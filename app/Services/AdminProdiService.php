@@ -1125,7 +1125,7 @@ class AdminProdiService
     /**
      * Ambil semua record pivot CPMK–CPL untuk satu mata kuliah.
      */
-    protected function viewPemetaanCpmk(array $data): array
+    public function viewPemetaanCpmk(array $data): array
     {
         $mataKuliah = MataKuliah::with('cpmks.cpls')->findOrFail($data['mata_kuliah_id']);
         $pemetaan   = [];

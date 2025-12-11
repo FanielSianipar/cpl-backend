@@ -279,4 +279,16 @@ class AdminProdiController extends Controller
 
         return response()->json($result, $statusCode);
     }
+
+    public function kelasCplCpmk(PemetaanCpmkRequest $request)
+    {
+        // Dapatkan data tervalidasi, lalu tambahkan key 'action' (misalnya dikirim via query atau body)
+        $data = $request->validated();
+        // Pastikan key 'action' diatur melalui request (misalnya store, update, view, delete)
+        $data['action'] = $request->input('action');
+
+        $result = $this->adminProdiService->viewPemetaanCpmk($data);
+
+        return response()->json($result, 200);
+    }
 }

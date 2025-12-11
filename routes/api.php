@@ -126,6 +126,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/kelola-sub-penilaian-oleh-prodi', [AdminProdiController::class, 'kelolaSubPenilaian']);
         Route::post('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
         Route::put('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
+        Route::get('/kelas-cpl-cpmk', [AdminProdiController::class, 'kelasCplCpmk']);
         Route::delete('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
     });
 
