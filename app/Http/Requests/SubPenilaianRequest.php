@@ -117,7 +117,7 @@ class SubPenilaianRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'action' => 'required|in:store,view,delete',
+            'action' => 'required|in:store,view,delete,store_bobot',
         ];
 
         $action = $this->input('action');
@@ -143,6 +143,17 @@ class SubPenilaianRequest extends FormRequest
             ];
         } elseif ($action === 'delete') {
             $rules['sub_penilaian_id'] = ['required', 'exists:sub_penilaian,sub_penilaian_id'];
+        } elseif ($action === 'store_bobot') {
+            // payload: kelas_id + rows[]
+            $rules += [
+                'kelas_id' => ['required', 'exists:kelas,kelas_id'],
+                'rows' => ['required', 'array', 'min:1'],
+                'rows.*.cpmk_id' => ['required', 'exists:cpmk,cpmk_id'],
+                'rows.*.bobot_acuan' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+                'rows.*.sub-penilaian' => ['required', 'array'],
+                'rows.*.sub-penilaian.*.sub_penilaian_id' => ['required', 'exists:sub_penilaian,sub_penilaian_id'],
+                'rows.*.sub-penilaian.*.bobot' => ['required', 'numeric', 'min:0'],
+            ];
         }
 
         return $rules;
@@ -151,8 +162,8 @@ class SubPenilaianRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'action.required' => 'Action harus diisi (store, view, atau delete).',
-            'action.in'       => 'Action tidak valid, pilih: store, view, delete.',
+            'action.required' => 'Action harus diisi (store, view, delete, atau store_bobot).',
+            'action.in'       => 'Action tidak valid, pilih: store, view, delete, store_bobot.',
 
             // view
             'sub_penilaian_id.required_without' => 'ID sub-penilaian wajib diisi jika kelas_id kosong.',
@@ -160,7 +171,7 @@ class SubPenilaianRequest extends FormRequest
             'kelas_id.required_without'         => 'ID kelas wajib diisi jika sub_penilaian_id kosong.',
             'kelas_id.exists'                   => 'Kelas tidak ditemukan.',
 
-            // store
+            // store (master)
             'penilaian_id.required'             => 'ID penilaian wajib diisi.',
             'penilaian_id.exists'               => 'Penilaian tidak ditemukan.',
             'kelas_id.required'                 => 'ID kelas wajib diisi.',
@@ -172,6 +183,22 @@ class SubPenilaianRequest extends FormRequest
             // delete
             'sub_penilaian_id.required'         => 'ID sub-penilaian diperlukan untuk aksi delete.',
             'sub_penilaian_id.exists'           => 'Sub-penilaian tidak ditemukan.',
+
+            // store_bobot (mapping)
+            'rows.required'                     => 'Parameter rows (array) diperlukan untuk menyimpan bobot.',
+            'rows.array'                        => 'Rows harus berupa array.',
+            'rows.min'                          => 'Rows minimal harus berisi satu baris pemetaan.',
+            'rows.*.cpmk_id.required'           => 'Setiap baris harus menyertakan cpmk_id.',
+            'rows.*.cpmk_id.exists'             => 'CPMK pada baris tidak ditemukan.',
+            'rows.*.bobot_acuan.numeric'        => 'bobot_acuan harus berupa angka.',
+            'rows.*.bobot_acuan.min'            => 'bobot_acuan tidak boleh negatif.',
+            'rows.*.sub-penilaian.required'       => 'Setiap baris harus memiliki sub-penilaian (daftar sub-penilaian dan bobot).',
+            'rows.*.sub-penilaian.array'          => 'Assignments harus berupa array.',
+            'rows.*.sub-penilaian.*.sub_penilaian_id.required' => 'Setiap sub-penilaian harus menyertakan sub_penilaian_id.',
+            'rows.*.sub-penilaian.*.sub_penilaian_id.exists'   => 'Sub-penilaian pada sub-penilaian tidak ditemukan.',
+            'rows.*.sub-penilaian.*.bobot.required'            => 'Setiap sub-penilaian harus menyertakan bobot.',
+            'rows.*.sub-penilaian.*.bobot.numeric'             => 'Bobot sub-penilaian harus berupa angka.',
+            'rows.*.sub-penilaian.*.bobot.min'                 => 'Bobot sub-penilaian tidak boleh negatif.',
         ];
     }
 }
