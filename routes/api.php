@@ -123,8 +123,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Kelola sub penilaian
     Route::middleware(['role:Admin Prodi', 'permission:Mengelola sub penilaian'])->group(function () {
         Route::get('/data-jenis-penilaian-prodi', [AdminProdiController::class, 'dataJenisPenilaian']);
-        Route::post('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
         Route::get('/kelola-sub-penilaian-oleh-prodi', [AdminProdiController::class, 'kelolaSubPenilaian']);
+        Route::post('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
         Route::delete('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
         Route::get('/kelas-cpl-cpmk', [AdminProdiController::class, 'kelasCplCpmk']);
         Route::post('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
