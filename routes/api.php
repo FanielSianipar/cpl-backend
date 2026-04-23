@@ -148,6 +148,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/kelola-sub-penilaian-oleh-dosen', [DosenController::class, 'kelolaSubPenilaian']);
         Route::post('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);
         Route::delete('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);
+        Route::get('/kelas-cpl-cpmk', [AdminProdiController::class, 'kelasCplCpmk']);
+        Route::post('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
     });
 
     // Kelola nilai mahasiswa

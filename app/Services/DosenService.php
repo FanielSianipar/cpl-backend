@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\MataKuliah;
 use App\Models\NilaiSubPenilaianMahasiswa;
 use App\Models\Penilaian;
 use App\Models\SubPenilaianCpmkMataKuliah;
@@ -38,7 +39,7 @@ class DosenService
     public function dataKelasMataKuliah(): array
     {
         try {
-            $dosenId = auth()->id(); // atau auth()->user()->dosen_id jika struktur user berbeda
+            $dosenId = auth()->id();
 
             $kelasMataKuliah = DB::table('kelas_dosen')
                 ->join('kelas', 'kelas_dosen.kelas_id', '=', 'kelas.kelas_id')
@@ -62,6 +63,34 @@ class DosenService
         } catch (Exception $e) {
             throw new Exception('Gagal mengambil data kelas mata kuliah: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Ambil semua record pivot CPMK–CPL untuk satu mata kuliah.
+     */
+    public function viewPemetaanCpmk(array $data): array
+    {
+        $mataKuliah = MataKuliah::with('cpmks.cpls')->findOrFail($data['mata_kuliah_id']);
+        $pemetaan   = [];
+
+        foreach ($mataKuliah->cpmks as $cpmk) {
+            foreach ($cpmk->cpls as $cpl) {
+                $pemetaan[] = [
+                    'kode_cpmk'          => $cpmk->kode_cpmk,
+                    'deskripsi_cpmk'     => $cpmk->deskripsi,
+                    'cpmk_mata_kuliah_id' => $cpl->pivot->cpmk_mata_kuliah_id,
+                    'mata_kuliah_id'      => $mataKuliah->mata_kuliah_id,
+                    'cpmk_id'             => $cpmk->cpmk_id,
+                    'cpl_id'              => $cpl->cpl_id,
+                    'bobot'               => $cpl->pivot->bobot,
+                ];
+            }
+        }
+
+        return [
+            'data'    => $pemetaan,
+            'message' => 'Data pemetaan CPMK berhasil diambil.',
+        ];
     }
 
     public function kelolaSubPenilaian(array $payload): array
