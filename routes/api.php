@@ -146,9 +146,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/data-jenis-penilaian', [DosenController::class, 'dataJenisPenilaian']);
         Route::get('/data-kelas-mata-kuliah', [DosenController::class, 'dataKelasMataKuliah']);
         Route::get('/kelola-sub-penilaian-oleh-dosen', [DosenController::class, 'kelolaSubPenilaian']);
-        // Route::post('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);
-        // Route::put('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);
-        // Route::delete('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);
+        Route::post('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);
+        Route::delete('/kelola-sub-penilaian', [DosenController::class, 'kelolaSubPenilaian']);
     });
 
     // Kelola nilai mahasiswa

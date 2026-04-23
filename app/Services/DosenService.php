@@ -12,6 +12,13 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class DosenService
 {
+    protected SubPenilaianService $subPenilaianService;
+
+    public function __construct(SubPenilaianService $subPenilaianService)
+    {
+        $this->subPenilaianService = $subPenilaianService;
+    }
+
     // Data Jenis Penilaian
     public function dataJenisPenilaian(): array
     {
@@ -55,6 +62,11 @@ class DosenService
         } catch (Exception $e) {
             throw new Exception('Gagal mengambil data kelas mata kuliah: ' . $e->getMessage());
         }
+    }
+
+    public function kelolaSubPenilaian(array $payload): array
+    {
+        return $this->subPenilaianService->kelolaSubPenilaian($payload);
     }
 
     /**
