@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Fakultas;
+use App\Models\Kelas;
 use App\Models\Prodi;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -373,5 +374,38 @@ class AdminUniversitasService
                 'nama_fakultas'       => $query->fakultas->nama_fakultas,
             ];
         })->toArray();
+    }
+
+    /**
+     * Ambil daftar mata kuliah beserta kelas
+     */
+    public function melihatDaftarMataKuliah(): array
+    {
+        $kelasList = Kelas::with('mataKuliah')
+            ->whereHas('mataKuliah')
+            ->get(['kelas_id', 'mata_kuliah_id', 'nama_kelas', 'tahun_ajaran', 'semester']);
+
+        $data = $kelasList->map(function ($kelas) {
+            $semester = $kelas->semester;
+
+            if (is_numeric($semester)) {
+                $ganjilGenap = ((int) $semester % 2 === 0) ? 'Genap' : 'Ganjil';
+            } else {
+                $ganjilGenap = ucfirst($semester);
+            }
+
+            return [
+                'kode_mk'          => $kelas->mataKuliah->kode_mata_kuliah,
+                'nama_mata_kuliah' => $kelas->mataKuliah->nama_mata_kuliah,
+                'nama_kelas'       => $kelas->nama_kelas,
+                'periode'          => "{$kelas->tahun_ajaran} {$ganjilGenap}",
+                'kelas_id'         => $kelas->kelas_id,
+            ];
+        })->toArray();
+
+        return [
+            'data'    => $data,
+            'message' => 'Daftar mata kuliah berhasil diambil.',
+        ];
     }
 }
