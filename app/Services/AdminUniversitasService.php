@@ -341,13 +341,6 @@ class AdminUniversitasService
         }
     }
 
-    /**
-     * Ambil status upload nilai untuk semua kelas (per baris),
-     * menampilkan hanya dosen dengan jabatan 'Dosen Utama'.
-     *
-     * @param  string|null  $tahunAjaran
-     * @return array[]
-     */
     public function statusPengisianNilaiCplProdi(): array
     {
         $query = Prodi::select(['kode_prodi', 'nama_prodi', 'fakultas_id'])
@@ -363,6 +356,21 @@ class AdminUniversitasService
                 'nama_prodi'  => $query->nama_prodi,
                 'nama_fakultas'       => $query->fakultas->nama_fakultas,
                 'status'      => 'Belum Selesai' // Placeholder, logika status bisa ditambahkan sesuai kebutuhan
+            ];
+        })->toArray();
+    }
+
+    public function daftarProdi(): array
+    {
+        $query = Prodi::select(['kode_prodi', 'nama_prodi', 'fakultas_id'])
+            ->with(['fakultas:fakultas_id,nama_fakultas'])
+            ->get();
+
+        return $query->map(function ($query) {
+            return [
+                'kode_prodi' => $query->kode_prodi,
+                'nama_prodi'  => $query->nama_prodi,
+                'nama_fakultas'       => $query->fakultas->nama_fakultas,
             ];
         })->toArray();
     }

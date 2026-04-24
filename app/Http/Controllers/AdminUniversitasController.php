@@ -106,4 +106,10 @@ class AdminUniversitasController extends Controller
         $result  = $this->adminUniversitasService->statusPengisianNilaiCplProdi();
         return response()->json($result, 200);
     }
+
+    public function daftarProdi()
+    {
+        $result  = $this->adminUniversitasService->daftarProdi();
+        return response()->json($result, 200);
+    }
 }
