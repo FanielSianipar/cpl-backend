@@ -49,10 +49,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/status-pengisian-nilai-cpl-prodi', [AdminUniversitasController::class, 'statusPengisianNilaiCplProdi']);
         Route::get('/daftar-prodi', [AdminUniversitasController::class, 'daftarProdi']);
         Route::get('/daftar-mata-kuliah-semua-prodi', [AdminUniversitasController::class, 'melihatDaftarMataKuliah']);
+        Route::get('/detail-perhitungan-perkelas-oleh-admin-universitas', [AdminUniversitasController::class, 'detailPerhitunganPerkelas']);
 
 
         Route::get('/nilai-cpl-seluruh-mata-kuliah', [AdminUniversitasController::class, 'nilaiCplSeluruhMataKuliah']);
-        Route::get('/detail-perhitungan-perkelas', [AdminUniversitasController::class, 'detailPerhitunganPerkelas']);
     });
 
     // Admin Prodi

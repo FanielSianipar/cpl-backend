@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\MelihatHasilPerhitunganRequest;
 use App\Http\Requests\ProdiRequest;
 use App\Http\Requests\StoreAkunRequest;
 use App\Services\AdminUniversitasService;
@@ -116,6 +117,21 @@ class AdminUniversitasController extends Controller
     public function melihatDaftarMataKuliah()
     {
         $result  = $this->adminUniversitasService->melihatDaftarMataKuliah();
+        return response()->json($result, 200);
+    }
+
+    /**
+     * Tampilkan “Hasil Perhitungan” lengkap untuk satu kelas.
+     *
+     * @param  int  $kelas_id
+     * @return JsonResponse
+     */
+    public function detailPerhitunganPerkelas(MelihatHasilPerhitunganRequest $request): JsonResponse
+    {
+        $kelasId = $request->validated()['kelas_id'];
+
+        $result = $this->adminUniversitasService->detailPerhitunganPerkelas($kelasId);
+
         return response()->json($result, 200);
     }
 }
