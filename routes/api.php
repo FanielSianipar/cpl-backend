@@ -45,8 +45,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/kelola-akun-admin-prodi', [AdminUniversitasController::class, 'kelolaAkunAdminProdi']);
     });
     // Lihat hasil perhitungan
-    Route::middleware(['permission:view calculation results'])->group(function () {
-        Route::get('/lihat-hasil-perhitungan', [AdminUniversitasController::class, 'viewCalculationResults']);
+    Route::middleware(['role:Admin Universitas', 'permission:Melihat hasil perhitungan'])->group(function () {
+        // Route::get('/lihat-hasil-perhitungan', [AdminUniversitasController::class, 'viewCalculationResults']);
+        Route::get('/status-pengisian-nilai-cpl-prodi', [AdminUniversitasController::class, 'statusPengisianNilaiCplProdi']);
+        Route::get('/nilai-cpl-seluruh-mata-kuliah', [AdminUniversitasController::class, 'nilaiCplSeluruhMataKuliah']);
+        Route::get('/daftar-mata-kuliah', [AdminUniversitasController::class, 'melihatDaftarMataKuliah']);
+        Route::get('/detail-perhitungan-perkelas', [AdminUniversitasController::class, 'detailPerhitunganPerkelas']);
     });
 
     // Admin Prodi

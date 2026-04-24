@@ -101,31 +101,9 @@ class AdminUniversitasController extends Controller
         return response()->json($result, $statusCode);
     }
 
-    /**
-     * Menampilkan hasil perhitungan.
-     *
-     * Contoh: Mengembalikan data dummy sebagai hasil perhitungan.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function viewCalculationResults()
+    public function statusPengisianNilaiCplProdi()
     {
-        try {
-            // Implementasikan logika untuk memperoleh hasil perhitungan secara dinamis
-            $results = [
-                'total_students' => 100,
-                'average_score'  => 85,
-                // Data perhitungan lainnya dapat ditambahkan di sini
-            ];
-
-            return response()->json([
-                'data'    => $results,
-                'message' => 'Calculation results retrieved successfully.'
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        $result  = $this->adminUniversitasService->statusPengisianNilaiCplProdi();
+        return response()->json($result, 200);
     }
 }
