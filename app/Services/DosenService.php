@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Kelas;
 use App\Models\MataKuliah;
 use App\Models\NilaiSubPenilaianMahasiswa;
 use App\Models\Penilaian;
@@ -215,5 +216,35 @@ class DosenService
         return $deleted
             ? ['message' => 'Nilai berhasil dihapus.']
             : ['message' => 'Nilai tidak ditemukan atau sudah dihapus.'];
+    }
+
+    public function melihatDaftarMataKuliah(): array
+    {
+        $kelasList = Kelas::with('mataKuliah')
+            ->whereHas('mataKuliah')
+            ->get(['kelas_id', 'mata_kuliah_id', 'nama_kelas', 'tahun_ajaran', 'semester']);
+
+        $data = $kelasList->map(function ($kelas) {
+            $semester = $kelas->semester;
+
+            if (is_numeric($semester)) {
+                $ganjilGenap = ((int) $semester % 2 === 0) ? 'Genap' : 'Ganjil';
+            } else {
+                $ganjilGenap = ucfirst($semester);
+            }
+
+            return [
+                'kode_mk'          => $kelas->mataKuliah->kode_mata_kuliah,
+                'nama_mata_kuliah' => $kelas->mataKuliah->nama_mata_kuliah,
+                'nama_kelas'       => $kelas->nama_kelas,
+                'periode'          => "{$kelas->tahun_ajaran} {$ganjilGenap}",
+                'kelas_id'         => $kelas->kelas_id,
+            ];
+        })->toArray();
+
+        return [
+            'data'    => $data,
+            'message' => 'Daftar mata kuliah berhasil diambil.',
+        ];
     }
 }

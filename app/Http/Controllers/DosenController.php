@@ -99,4 +99,10 @@ class DosenController extends Controller
 
         return response()->json($result, 200);
     }
+
+    public function melihatDaftarMataKuliah()
+    {
+        $result  = $this->dosenService->melihatDaftarMataKuliah();
+        return response()->json($result, 200);
+    }
 }

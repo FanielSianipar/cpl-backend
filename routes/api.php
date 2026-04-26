@@ -165,4 +165,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/kelola-nilai-mahasiswa', [DosenController::class, 'kelolaNilaiSubPenilaianMahasiswa']);
         Route::delete('/kelola-nilai-mahasiswa', [DosenController::class, 'kelolaNilaiSubPenilaianMahasiswa']);
     });
+
+    // Melihat hasil perhitungan
+    Route::middleware(['role:Dosen', 'permission:Melihat hasil perhitungan'])->group(function () {
+        Route::get('/daftar-mata-kuliah', [DosenController::class, 'melihatDaftarMataKuliah']);
+    });
 });

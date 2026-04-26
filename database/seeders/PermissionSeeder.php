@@ -70,6 +70,7 @@ class PermissionSeeder extends Seeder
             $dosen->givePermissionTo([
                 'Mengelola sub penilaian',
                 'Mengelola data nilai mahasiswa',
+                'Melihat hasil perhitungan',
             ]);
         }
     }
