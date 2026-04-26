@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\MelihatHasilPerhitunganRequest;
 use App\Http\Requests\NilaiSubPenilaianMahasiswaRequest;
 use App\Http\Requests\PemetaanCpmkRequest;
 use App\Http\Requests\SubPenilaianRequest;
@@ -103,6 +104,21 @@ class DosenController extends Controller
     public function melihatDaftarMataKuliah()
     {
         $result  = $this->dosenService->melihatDaftarMataKuliah();
+        return response()->json($result, 200);
+    }
+
+    /**
+     * Tampilkan “Hasil Perhitungan” lengkap untuk satu kelas.
+     *
+     * @param  int  $kelas_id
+     * @return JsonResponse
+     */
+    public function detailPerhitunganPerkelas(MelihatHasilPerhitunganRequest $request): JsonResponse
+    {
+        $kelasId = $request->validated()['kelas_id'];
+
+        $result = $this->dosenService->detailPerhitunganPerkelas($kelasId);
+
         return response()->json($result, 200);
     }
 }

@@ -169,5 +169,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Melihat hasil perhitungan
     Route::middleware(['role:Dosen', 'permission:Melihat hasil perhitungan'])->group(function () {
         Route::get('/daftar-mata-kuliah', [DosenController::class, 'melihatDaftarMataKuliah']);
+        Route::get('/detail-perhitungan-perkelas', [KaprodiController::class, 'detailPerhitunganPerkelas']);
     });
 });
