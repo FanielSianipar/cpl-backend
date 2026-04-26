@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\CPL;
 use App\Models\CPMK;
 use App\Models\Kelas;
+use App\Models\MataKuliah;
 use App\Models\NilaiSubPenilaianMahasiswa;
 use App\Models\SubPenilaianCpmkMataKuliah;
 use Illuminate\Support\Collection;
@@ -151,6 +152,66 @@ class KaprodiService
         return [
             'data'    => $data,
             'message' => 'Data CPL berhasil diambil.'
+        ];
+    }
+
+    /**
+     * Ambil data mata kuliah untuk melihat cpmk yang terkait ke mata kuliah
+     */
+    public function dataMataKuliah(): array
+    {
+        $mataKuliah = MataKuliah::get(['kode_mata_kuliah', 'nama_mata_kuliah']);
+
+        $data = $mataKuliah->map(function ($mataKuliah) {
+            return [
+                'kode_mata_kuliah'          => $mataKuliah->kode_mata_kuliah,
+                'nama_mata_kuliah' => $mataKuliah->nama_mata_kuliah,
+            ];
+        })->toArray();
+
+        return [
+            'data'    => $data,
+            'message' => 'Data mata kuliah berhasil diambil.',
+        ];
+    }
+
+    /**
+     * Ambil data pemetaan CPMK pada mata kuliah
+     */
+    public function dataPemetaanCpmkPadaMataKuliah(array $data): array
+    {
+        if (empty($data['mata_kuliah_id'])) {
+            return [
+                'message' => 'Parameter mata_kuliah_id tidak diberikan.'
+            ];
+        }
+
+        $mataKuliah = MataKuliah::with(['cpmks' => function ($query) {
+            $query->select('mata_kuliah_id', 'kode_cpmk', 'deskripsi');
+        }])
+            ->select('mata_kuliah_id', 'nama_mata_kuliah', 'kode_mata_kuliah')
+            ->find($data['mata_kuliah_id']);
+
+        if (!$mataKuliah) {
+            return [
+                'message' => 'Mata kuliah tidak ditemukan.'
+            ];
+        }
+
+        $data = [
+            'kode_mata_kuliah' => $mataKuliah->kode_mata_kuliah,
+            'nama_mata_kuliah' => $mataKuliah->nama_mata_kuliah,
+            'cpmks' => $mataKuliah->cpmks->map(function ($cpmk) {
+                return [
+                    'kode_cpmk'      => $cpmk->kode_cpmk,
+                    'deskripsi_cpmk' => $cpmk->deskripsi,
+                ];
+            })->toArray(),
+        ];
+
+        return [
+            'data'    => $data,
+            'message' => 'Data pemetaan CPMK pada mata kuliah berhasil diambil.',
         ];
     }
 

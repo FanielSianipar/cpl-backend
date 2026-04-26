@@ -38,6 +38,19 @@ class KaprodiController extends Controller
         return response()->json($result, 200);
     }
 
+    public function dataMataKuliah()
+    {
+        $result  = $this->kaprodiService->dataMataKuliah();
+        return response()->json($result, 200);
+    }
+
+    public function dataPemetaanCpmkPadaMataKuliah()
+    {
+        $mataKuliahId = request()->input('mata_kuliah_id');
+        $result  = $this->kaprodiService->dataPemetaanCpmkPadaMataKuliah(['mata_kuliah_id' => $mataKuliahId]);
+        return response()->json($result, 200);
+    }
+
     public function melihatDaftarMataKuliah()
     {
         $result  = $this->kaprodiService->melihatDaftarMataKuliah();

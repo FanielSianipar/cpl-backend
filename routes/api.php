@@ -140,9 +140,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::middleware(['role:Kaprodi', 'permission:Melihat hasil perhitungan'])->group(function () {
         Route::get('/status-pengisian-nilai-mata-kuliah', [KaprodiController::class, 'statusPengisianNilaiMataKuliah']);
         Route::get('/nilai-cpl-seluruh-mata-kuliah', [KaprodiController::class, 'nilaiCplSeluruhMataKuliah']);
+        Route::get('/data-cpl-prodi', [KaprodiController::class, 'dataCplProdi']);
+        Route::get('/data-mata-kuliah', [KaprodiController::class, 'dataMataKuliah']);
+        Route::get('/data-pemetaan-cpmk-pada-mata-kuliah', [KaprodiController::class, 'dataPemetaanCpmkPadaMataKuliah']);
         Route::get('/daftar-mata-kuliah', [KaprodiController::class, 'melihatDaftarMataKuliah']);
         Route::get('/detail-perhitungan-perkelas', [KaprodiController::class, 'detailPerhitunganPerkelas']);
-        Route::get('/data-cpl-prodi', [KaprodiController::class, 'dataCplProdi']);
     });
 
     // Dosen
