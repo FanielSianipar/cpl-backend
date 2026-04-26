@@ -143,7 +143,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Route::get('/data-mata-kuliah', [AdminProdiController::class, 'dataMataKuliah']);
         // Route::get('/data-pemetaan-cpmk-pada-mata-kuliah', [AdminProdiController::class, 'dataPemetaanCpmkPadaMataKuliah']);
         Route::get('/daftar-mata-kuliah-oleh-admin-prodi', [AdminProdiController::class, 'melihatDaftarMataKuliah']);
-        // Route::get('/detail-perhitungan-perkelas', [AdminProdiController::class, 'detailPerhitunganPerkelas']);
+        Route::get('/detail-perhitungan-perkelas-oleh-admin-prodi', [AdminProdiController::class, 'detailPerhitunganPerkelas']);
     });
 
     // Kaprodi

@@ -9,6 +9,7 @@ use App\Http\Requests\DaftarMahasiswaKeKelasRequest;
 use App\Http\Requests\KelasRequest;
 use App\Http\Requests\MahasiswaRequest;
 use App\Http\Requests\MataKuliahRequest;
+use App\Http\Requests\MelihatHasilPerhitunganRequest;
 use App\Http\Requests\PemetaanCplRequest;
 use App\Http\Requests\PemetaanCpmkRequest;
 use App\Http\Requests\StoreAkunRequest;
@@ -295,6 +296,21 @@ class AdminProdiController extends Controller
     public function melihatDaftarMataKuliah()
     {
         $result  = $this->adminProdiService->melihatDaftarMataKuliah();
+        return response()->json($result, 200);
+    }
+
+    /**
+     * Tampilkan “Hasil Perhitungan” lengkap untuk satu kelas.
+     *
+     * @param  int  $kelas_id
+     * @return JsonResponse
+     */
+    public function detailPerhitunganPerkelas(MelihatHasilPerhitunganRequest $request): JsonResponse
+    {
+        $kelasId = $request->validated()['kelas_id'];
+
+        $result = $this->adminProdiService->detailPerhitunganPerkelas($kelasId);
+
         return response()->json($result, 200);
     }
 }
