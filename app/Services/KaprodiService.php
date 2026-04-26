@@ -59,22 +59,16 @@ class KaprodiService
             ->orderBy('pm.kode_cpl')
             ->get();
 
-        // 4️⃣ Format siap Chart.js
         return [
-            'labels'   => $rows->pluck('kode_cpl')->toArray(),
-            'datasets' => [
+            'kode_cpl'   => $rows->pluck('kode_cpl')->toArray(),
+            'nilai_cpl' => [
                 [
                     'label'           => 'Target CPL',
-                    'data'            => $rows->pluck('target')->map(fn($v) => round($v, 2))->toArray(),
-                    // 'borderColor'     => 'rgba(54, 162, 235, 1)',
-                    // 'backgroundColor' => 'rgba(54, 162, 235, 0.2)',
-                    // 'borderDash'      => [5, 5],
+                    'nilai_target'            => $rows->pluck('target')->map(fn($v) => round($v, 2))->first(),
                 ],
                 [
                     'label'           => 'Aktual CPL',
-                    'data'            => $rows->pluck('aktual')->map(fn($v) => round($v, 2))->toArray(),
-                    // 'borderColor'     => 'rgba(255, 99, 132, 1)',
-                    // 'backgroundColor' => 'rgba(255, 99, 132, 0.2)',
+                    'nilai_aktual'            => $rows->pluck('aktual')->map(fn($v) => round($v, 2))->first(),
                 ],
             ],
         ];
