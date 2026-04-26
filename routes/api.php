@@ -135,6 +135,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/kelas-cpl-cpmk', [AdminProdiController::class, 'kelasCplCpmk']);
         Route::post('/kelola-sub-penilaian', [AdminProdiController::class, 'kelolaSubPenilaian']);
     });
+    // Melihat hasil perhitungan
+    Route::middleware(['role:Admin Prodi', 'permission:Melihat hasil perhitungan'])->group(function () {
+        // Route::get('/status-pengisian-nilai-mata-kuliah', [AdminProdiController::class, 'statusPengisianNilaiMataKuliah']);
+        // Route::get('/nilai-cpl-seluruh-mata-kuliah', [AdminProdiController::class, 'nilaiCplSeluruhMataKuliah']);
+        // Route::get('/data-cpl-prodi', [AdminProdiController::class, 'dataCplProdi']);
+        // Route::get('/data-mata-kuliah', [AdminProdiController::class, 'dataMataKuliah']);
+        // Route::get('/data-pemetaan-cpmk-pada-mata-kuliah', [AdminProdiController::class, 'dataPemetaanCpmkPadaMataKuliah']);
+        Route::get('/daftar-mata-kuliah-oleh-admin-prodi', [AdminProdiController::class, 'melihatDaftarMataKuliah']);
+        // Route::get('/detail-perhitungan-perkelas', [AdminProdiController::class, 'detailPerhitunganPerkelas']);
+    });
 
     // Kaprodi
     Route::middleware(['role:Kaprodi', 'permission:Melihat hasil perhitungan'])->group(function () {
