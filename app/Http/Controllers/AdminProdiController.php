@@ -293,6 +293,12 @@ class AdminProdiController extends Controller
         return response()->json($result, 200);
     }
 
+    public function statusPengisianNilaiMataKuliah()
+    {
+        $result  = $this->adminProdiService->statusPengisianNilaiMataKuliah();
+        return response()->json($result, 200);
+    }
+
     public function melihatDaftarMataKuliah()
     {
         $result  = $this->adminProdiService->melihatDaftarMataKuliah();

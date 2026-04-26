@@ -9,6 +9,7 @@ use App\Models\Kelas;
 use App\Models\Mahasiswa;
 use App\Models\MataKuliah;
 use App\Models\MataKuliahCpmkPivot;
+use App\Models\NilaiSubPenilaianMahasiswa;
 use App\Models\Penilaian;
 use App\Models\Prodi;
 use App\Models\User;
@@ -1289,6 +1290,67 @@ class AdminProdiService
     public function kelolaSubPenilaian(array $payload): array
     {
         return $this->subPenilaianService->kelolaSubPenilaian($payload);
+    }
+
+    /**
+     * Ambil status upload nilai untuk semua kelas (per baris),
+     * menampilkan hanya dosen dengan jabatan 'Dosen Utama'.
+     *
+     * @param  string|null  $tahunAjaran
+     * @return array[]
+     */
+    public function statusPengisianNilaiMataKuliah(string $tahunAjaran = null): array
+    {
+        $query = Kelas::select(['kelas_id', 'mata_kuliah_id', 'nama_kelas', 'semester', 'tahun_ajaran'])
+            ->with(['mataKuliah:mata_kuliah_id,nama_mata_kuliah', 'dosens:id,name', 'subPenilaian.cpmks'])
+            // load count mahasiswa terdaftar via pivot kelas_mahasiswa
+            ->withCount('mahasiswas');
+
+        if ($tahunAjaran) {
+            $query->where('tahun_ajaran', $tahunAjaran);
+        }
+
+        return $query->get()->map(function (Kelas $kelas) {
+            $namaMataKuliah = $kelas->mataKuliah()->pluck('nama_mata_kuliah')->first();
+
+            $dosenUtama = $kelas->dosens
+                ->filter(fn($dosen) => $dosen->pivot->jabatan === 'Dosen Utama')
+                ->pluck('name')
+                ->implode(' • ');
+
+            $genapGanjil = $kelas->semester % 2 === 0 ? 'Genap' : 'Ganjil';
+            $periode      = "{$kelas->tahun_ajaran} {$genapGanjil}";
+
+            $pivotIds = $kelas->subPenilaian
+                ->flatMap(
+                    fn($subPenilaian) => $subPenilaian->cpmks
+                        ->pluck('pivot.sub_penilaian_cpmk_mata_kuliah_id')
+                )
+                ->unique()
+                ->toArray();
+
+            $jumlahNilaiDiisi = empty($pivotIds) ? 0
+                : NilaiSubPenilaianMahasiswa::whereIn(
+                    'sub_penilaian_cpmk_mata_kuliah_id',
+                    $pivotIds
+                )
+                ->distinct('mahasiswa_id')
+                ->count('mahasiswa_id');
+
+            $jumlahMahasiswaTerdaftar = $kelas->mahasiswas_count;
+
+            $status = ($jumlahMahasiswaTerdaftar > 0 && $jumlahNilaiDiisi === $jumlahMahasiswaTerdaftar)
+                ? 'Selesai'
+                : 'Belum Selesai';
+
+            return [
+                'nama_mata_kuliah' => $namaMataKuliah,
+                'nama_kelas'  => $kelas->nama_kelas,
+                'dosen'       => $dosenUtama ?: '-',
+                'periode'     => $periode,
+                'status'      => $status,
+            ];
+        })->toArray();
     }
 
     /**
