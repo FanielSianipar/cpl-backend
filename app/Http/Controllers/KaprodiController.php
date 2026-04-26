@@ -32,6 +32,12 @@ class KaprodiController extends Controller
         return response()->json($result, 200);
     }
 
+    public function dataCplProdi()
+    {
+        $result  = $this->kaprodiService->dataCplProdi();
+        return response()->json($result, 200);
+    }
+
     public function melihatDaftarMataKuliah()
     {
         $result  = $this->kaprodiService->melihatDaftarMataKuliah();

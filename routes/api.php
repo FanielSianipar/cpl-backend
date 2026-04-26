@@ -142,8 +142,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/nilai-cpl-seluruh-mata-kuliah', [KaprodiController::class, 'nilaiCplSeluruhMataKuliah']);
         Route::get('/daftar-mata-kuliah', [KaprodiController::class, 'melihatDaftarMataKuliah']);
         Route::get('/detail-perhitungan-perkelas', [KaprodiController::class, 'detailPerhitunganPerkelas']);
-        // Route::post('/map-cpl', [PermissionController::class, 'mapCPL']);
-        // Route::post('/map-cpmk', [PermissionController::class, 'mapCPMK']);
+        Route::get('/data-cpl-prodi', [KaprodiController::class, 'dataCplProdi']);
     });
 
     // Dosen

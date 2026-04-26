@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CPL;
 use App\Models\CPMK;
 use App\Models\Kelas;
 use App\Models\NilaiSubPenilaianMahasiswa;
@@ -133,6 +134,24 @@ class KaprodiService
                 'status'      => $status,
             ];
         })->toArray();
+    }
+
+    public function dataCplProdi(): array
+    {
+
+        $cpl = CPL::get(['kode_cpl', 'deskripsi']);
+
+        $data = $cpl->map(function ($cpl) {
+            return [
+                'kode_cpl'       => $cpl->kode_cpl,
+                'deskripsi_cpl'  => $cpl->deskripsi,
+            ];
+        })->toArray();
+
+        return [
+            'data'    => $data,
+            'message' => 'Data CPL berhasil diambil.'
+        ];
     }
 
     /**
