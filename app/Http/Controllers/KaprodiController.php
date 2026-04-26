@@ -26,9 +26,9 @@ class KaprodiController extends Controller
         return response()->json($result, 200);
     }
 
-    public function statusPengisianNilai()
+    public function statusPengisianNilaiMataKuliah()
     {
-        $result  = $this->kaprodiService->statusPengisianNilai();
+        $result  = $this->kaprodiService->statusPengisianNilaiMataKuliah();
         return response()->json($result, 200);
     }
 

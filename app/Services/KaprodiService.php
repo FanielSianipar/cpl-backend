@@ -87,7 +87,7 @@ class KaprodiService
      * @param  string|null  $tahunAjaran
      * @return array[]
      */
-    public function statusPengisianNilai(string $tahunAjaran = null): array
+    public function statusPengisianNilaiMataKuliah(string $tahunAjaran = null): array
     {
         $query = Kelas::select(['kelas_id', 'mata_kuliah_id', 'nama_kelas', 'semester', 'tahun_ajaran'])
             ->with(['mataKuliah:mata_kuliah_id,nama_mata_kuliah', 'dosens:id,name', 'subPenilaian.cpmks'])
@@ -99,6 +99,8 @@ class KaprodiService
         }
 
         return $query->get()->map(function (Kelas $kelas) {
+            $namaMataKuliah = $kelas->mataKuliah()->pluck('nama_mata_kuliah')->first();
+
             $dosenUtama = $kelas->dosens
                 ->filter(fn($dosen) => $dosen->pivot->jabatan === 'Dosen Utama')
                 ->pluck('name')
@@ -130,7 +132,7 @@ class KaprodiService
                 : 'Belum Selesai';
 
             return [
-                'mata_kuliah' => $kelas->mataKuliah->nama_mata_kuliah,
+                'nama_mata_kuliah' => $namaMataKuliah,
                 'nama_kelas'  => $kelas->nama_kelas,
                 'dosen'       => $dosenUtama ?: '-',
                 'periode'     => $periode,
